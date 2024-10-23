@@ -10,7 +10,7 @@ env:
   GODOT_SDK_LINUX_X86_32: /root/i686-godot-linux-gnu_sdk-buildroot
   GODOT_SDK_LINUX_ARM64: /root/aarch64-godot-linux-gnu_sdk-buildroot
   GODOT_SDK_LINUX_ARM32: /root/arm-godot-linux-gnueabihf_sdk-buildroot
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes"
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
   SCONS_CACHE_MSVC_CONFIG: true
 
 jobs:
