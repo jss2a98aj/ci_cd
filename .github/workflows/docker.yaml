@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'images/**'
+      - '.github/docker.yaml'
 
 
 jobs:
@@ -44,6 +45,6 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          file: ${{ matrix.dockerfile }}
+          file: ${{ matrix.file }}
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ matrix.tag }}:latest
