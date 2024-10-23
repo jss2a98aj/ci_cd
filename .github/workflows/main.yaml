@@ -1,6 +1,8 @@
+name: Testing
 on:
   repository_dispatch:
     types: [test_result]
+  workflow_call:
 
 jobs:
   run_if_failure:
