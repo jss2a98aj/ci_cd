@@ -46,7 +46,7 @@ jobs:
       - name: Setup Artifact Naming Scheme
         id: naming
         run: |
-          if [ "${MONO}" == "1" ]; then
+          if [ "$MONO" == "1" ]; then
             echo "BASE_NAME=$PLATFORM-${{ matrix.type }}-mono" >> "$GITHUB_OUTPUT"
             echo "STEP_NAME=${{ matrix.name }}/w Mono" >> "$GITHUB_OUTPUT"
           else
@@ -55,14 +55,14 @@ jobs:
           fi
 
       - name: Download Mono Glue
-        if: ${{ "${MONO}" == '1' }}
+        if: ${{ "$MONO" == '1' }}
         uses: actions/download-artifact@v3
         with:
           name: mono-glue
           path: /root/mono-glue
 
       - name: Setup Mono Glue
-        if: ${{ "${MONO}" == '1' }}
+        if: ${{ "$MONO" == '1' }}
         run: |
           cp -r /root/mono-glue/GodotSharp/GodotSharp/Generated modules/mono/glue/GodotSharp/GodotSharp/
           cp -r /root/mono-glue/GodotSharp/GodotSharpEditor/Generated modules/mono/glue/GodotSharp/GodotSharpEditor/
@@ -73,7 +73,7 @@ jobs:
 
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         run: |
-          if [ "${MONO}" == "1" ]; then
+          if [ "$MONO" == "1" ]; then
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
@@ -91,7 +91,7 @@ jobs:
 
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Templates
         run: |
-          if [ "${MONO}" == "1" ]; then
+          if [ "$MONO" == "1" ]; then
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_debug
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_release
           else
