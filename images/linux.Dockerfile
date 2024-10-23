@@ -10,9 +10,9 @@ ENV SCON_VERSION=4.8.0
 RUN dnf update -y
 
 # Install bash, curl, and other basic utilities
-RUN dnf install -y \
+RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
-    git make nano patch pkg-config unzip xz
+    git make nano patch pkg-config unzip xz gcc-c++ cmake gdb
 
 # Install Python and pip for SCons
 RUN dnf install -y python3-pip
