@@ -26,9 +26,10 @@ jobs:
         with:
           repository: blazium-engine/blazium
           ref: ${{ github.event.client_payload.branch }}
+          fetch-depth: 1
 
-      # Step to set up the environment (similar to Dockerfile ENV and exports)
-      - name: Setup environment variables
+      # Step to build the project and Mono glue
+      - name: Build Project and Generate Mono Glue
         run: |
           export SCONS="scons -j$(nproc) verbose=yes warnings=no progress=no"
           export OPTIONS="debug_symbols=no use_static_cpp=no"
@@ -36,9 +37,6 @@ jobs:
           export DISPLAY=:0
           export PATH="${GODOT_SDK_LINUX_X86_64}/bin:${PATH}"
 
-      # Step to build the project and Mono glue
-      - name: Build Project and Generate Mono Glue
-        run: |
           set -e
           echo "Building and generating Mono glue..."
 
