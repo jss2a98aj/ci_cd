@@ -7,7 +7,6 @@ ENV DOTNET_NOLOGO=1
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV SCON_VERSION=4.8.0
 
-
 # Install dependencies for .NET, Python SCons, and essential packages
 RUN dnf -y install --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext git make nano patch pkgconfig python3-pip unzip which xz \
@@ -30,13 +29,14 @@ RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools
 # Download the Android command-line tools
 RUN curl -LO https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
     unzip commandlinetools-linux-11076708_latest.zip -d ${ANDROID_SDK_ROOT}/cmdline-tools && \
-    rm commandlinetools-linux-11076708_latest.zip
+    rm commandlinetools-linux-11076708_latest.zip && \
+    mv ${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest
 
 # Accept licenses
-RUN yes | ${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
+RUN yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
 
 # Install Android SDK components including NDK, build-tools, platforms, and cmake
-RUN ${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" \
+RUN ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" \
     "ndk;${ANDROID_NDK_VERSION}" 'cmdline-tools;latest' 'build-tools;34.0.0' 'platforms;android-34' 'cmake;3.22.1'
 
 CMD /bin/bash
