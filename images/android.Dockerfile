@@ -7,6 +7,7 @@ ENV DOTNET_NOLOGO=1
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV SCON_VERSION=4.8.0
 
+
 # Install dependencies for .NET, Python SCons, and essential packages
 RUN dnf -y install --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext git make nano patch pkgconfig python3-pip unzip which xz \
