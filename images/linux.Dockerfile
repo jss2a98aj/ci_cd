@@ -1,3 +1,4 @@
+# Stage 1: Base environment setup using Fedora 40
 FROM fedora:40 AS base
 
 WORKDIR /root
@@ -10,23 +11,22 @@ RUN dnf update -y
 
 # Install bash, curl, and other basic utilities
 RUN dnf install -y \
-    bash bzip2 curl file findutils gettext git make nano patch pkg-config unzip xz \
-    && dnf clean all
+    bash bzip2 curl file findutils gettext \
+    git make nano patch pkg-config unzip xz
 
 # Install Python and pip for SCons
-RUN dnf install -y python3-pip \
-    && dnf clean all
+RUN dnf install -y python3-pip
 
 # Install SCons
 RUN pip install scons==${SCON_VERSION}
 
 # Install .NET SDK
-RUN dnf install -y dotnet-sdk-8.0 \
-    && dnf clean all
+RUN dnf install -y dotnet-sdk-8.0
 
 # Install Wayland development tools
-RUN dnf install -y wayland-devel \
-    && dnf clean all
+RUN dnf install -y wayland-devel
+
+RUN dnf clean all
 
 # Stage 2: Godot SDK setup
 FROM base AS godot_sdk
@@ -39,12 +39,18 @@ ENV GODOT_SDK_PATH="/root"
 
 # Download and install Godot SDKs for various architectures
 RUN for arch in $GODOT_SDK_VERSIONS; do \
-      curl -LO ${GODOT_SDK_BASE_URL}/${arch}-godot-linux-gnu_sdk-buildroot.tar.bz2 && \
-      tar xf ${arch}-godot-linux-gnu_sdk-buildroot.tar.bz2 && \
-      rm -f ${arch}-godot-linux-gnu_sdk-buildroot.tar.bz2 && \
-      cd ${arch}-godot-linux-gnu_sdk-buildroot && \
-      ./relocate-sdk.sh && \
-      cd /root; \
-    done
+    if [ "$arch" = "arm" ]; then \
+      sdk_file="arm-godot-linux-gnueabihf_sdk-buildroot.tar.bz2"; \
+    else \
+      sdk_file="${arch}-godot-linux-gnu_sdk-buildroot.tar.bz2"; \
+    fi; \
+    echo "Downloading SDK for $arch..." && \
+    curl -LO ${GODOT_SDK_BASE_URL}/$sdk_file && \
+    tar xf $sdk_file && \
+    rm -f $sdk_file && \
+    cd ${arch}-godot-linux-gnu_sdk-buildroot || cd arm-godot-linux-gnueabihf_sdk-buildroot && \
+    ./relocate-sdk.sh && \
+    cd /root; \
+done
 
-CMD ["/bin/bash"]
+CMD /bin/bash
