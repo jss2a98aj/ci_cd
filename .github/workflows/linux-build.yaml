@@ -49,6 +49,11 @@ jobs:
           repository: blazium-engine/blazium
           ref: ${{ github.event.client_payload.branch }}
           fetch-depth: 1
+          
+      - name: Get BASE_PATH
+        id: pathing
+        run: |
+            echo "BASE_PATH=$PATH" >> "$GITHUB_OUTPUT"
 
       - name: Setup Artifact Naming Scheme
         id: naming
@@ -76,7 +81,7 @@ jobs:
 
       - name: Setup Path for ${{ steps.naming.outputs.STEP_NAME }}
         run: |
-          export PATH="${{ matrix.path }}/bin:$BASE_PATH"
+          export PATH="${{ matrix.path }}/bin:${{ steps.pathing.outputs.BASE_PATH }}"
 
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         run: |

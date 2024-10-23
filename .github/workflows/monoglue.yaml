@@ -28,6 +28,11 @@ jobs:
           repository: blazium-engine/blazium
           ref: ${{ github.event.client_payload.branch }}
           fetch-depth: 1
+          
+      - name: Get BASE_PATH
+        id: pathing
+        run: |
+            echo "BASE_PATH=$PATH" >> "$GITHUB_OUTPUT"
 
       # Step to build the project and Mono glue
       - name: Build Project and Generate Mono Glue
@@ -36,7 +41,7 @@ jobs:
           export OPTIONS="debug_symbols=no use_static_cpp=no"
           export TERM=xterm
           export DISPLAY=:0
-          export PATH="${GODOT_SDK_LINUX_X86_64}/bin:${BASE_PATH}"
+          export PATH="${GODOT_SDK_LINUX_X86_64}/bin:${{ steps.pathing.outputs.BASE_PATH }}"
 
           set -e
           echo "Building and generating Mono glue..."
