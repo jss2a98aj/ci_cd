@@ -12,7 +12,6 @@ env:
   GODOT_SDK_LINUX_ARM32: /root/arm-godot-linux-gnueabihf_sdk-buildroot
   SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
   SCONS_CACHE_MSVC_CONFIG: true
-  BASE_PATH: $PATH
 
 jobs:
   build-glue:
@@ -28,7 +27,7 @@ jobs:
           repository: blazium-engine/blazium
           ref: ${{ github.event.client_payload.branch }}
           fetch-depth: 1
-          
+
       - name: Get BASE_PATH
         id: pathing
         run: |
