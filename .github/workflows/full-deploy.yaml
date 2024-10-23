@@ -1,0 +1,24 @@
+name: Multi-Stage Deployment
+on:
+  repository_dispatch:
+    types: [test_deploy]
+
+concurrency:
+  group: ci-test_deploy-runner
+  cancel-in-progress: true
+
+jobs:
+  mono-glue:
+    name: Building Mono Glue for Mono Editor Builds
+    uses: ./.github/workflows/monoglue.yaml
+  linux:
+    name: Building Linux Editors
+    uses: ./.github/workflows/linux-build.yaml
+    with:
+      MONO: 0
+  linux-mono:
+    needs: mono-glue
+    name: Building Linux Editors/w Mono
+    uses: ./.github/workflows/linux-build.yaml
+    with:
+      MONO: 1

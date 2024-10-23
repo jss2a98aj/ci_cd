@@ -1,8 +1,8 @@
-name: Build and Deploy
+name: Monoglue Builder
 
 on:
   repository_dispatch:
-    types: [deploy_linux]
+    types: [deploy_monoglue]
   workflow_call:
 
 env:
@@ -12,6 +12,7 @@ env:
   GODOT_SDK_LINUX_ARM32: /root/arm-godot-linux-gnueabihf_sdk-buildroot
   SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
   SCONS_CACHE_MSVC_CONFIG: true
+  BASE_PATH: $PATH
 
 jobs:
   build-glue:
@@ -35,7 +36,7 @@ jobs:
           export OPTIONS="debug_symbols=no use_static_cpp=no"
           export TERM=xterm
           export DISPLAY=:0
-          export PATH="${GODOT_SDK_LINUX_X86_64}/bin:${PATH}"
+          export PATH="${GODOT_SDK_LINUX_X86_64}/bin:${BASE_PATH}"
 
           set -e
           echo "Building and generating Mono glue..."
