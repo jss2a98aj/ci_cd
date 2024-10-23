@@ -6,6 +6,8 @@ ENV DOTNET_NOLOGO=1
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV SCON_VERSION=4.8.0
 
+RUN dnf update -y
+
 # Install bash, curl, and other basic utilities
 RUN dnf install -y \
     bash bzip2 curl file findutils gettext git make nano patch pkg-config unzip xz \
