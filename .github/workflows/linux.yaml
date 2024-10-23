@@ -1,0 +1,65 @@
+name: Build and Deploy
+
+on:
+  repository_dispatch:
+    types: [deploy_linux]
+  workflow_call:
+
+env:
+  GODOT_SDK_LINUX_X86_64: /root/x86_64-godot-linux-gnu_sdk-buildroot
+  GODOT_SDK_LINUX_X86_32: /root/i686-godot-linux-gnu_sdk-buildroot
+  GODOT_SDK_LINUX_ARM64: /root/aarch64-godot-linux-gnu_sdk-buildroot
+  GODOT_SDK_LINUX_ARM32: /root/arm-godot-linux-gnueabihf_sdk-buildroot
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes d3d12=yes "angle_libs=${{github.workspace}}/"
+  SCONS_CACHE_MSVC_CONFIG: true
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: bioblaze/blazium-linux:latest
+    name: Setting up Linux SDKs and Building for Linux
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch }}
+
+      # Step to set up the environment (similar to Dockerfile ENV and exports)
+      - name: Setup environment variables
+        run: |
+          export SCONS="scons -j$(nproc) verbose=yes warnings=no progress=no"
+          export OPTIONS="debug_symbols=no use_static_cpp=no"
+          export TERM=xterm
+          export DISPLAY=:0
+          export PATH="${GODOT_SDK_LINUX_X86_64}/bin:${PATH}"
+
+      # Step to build the project and Mono glue
+      - name: Build Project and Generate Mono Glue
+        run: |
+          set -e
+          echo "Building and generating Mono glue..."
+
+          dotnet --info
+
+          # Build Blazium with Mono module enabled
+          ${SCONS} platform=linuxbsd ${OPTIONS} target=editor module_mono_enabled=yes
+
+          # Generate Mono glue
+          rm -rf /root/mono-glue/*
+          bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue /root/mono-glue
+          echo "Mono glue generated successfully"
+
+      # Step to upload the generated Mono glue as an artifact
+      - name: Upload Mono Glue as an Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mono-glue
+          path: /root/mono-glue
+
+      # Additional build steps if needed
+      - name: Finalize build process
+        run: |
+          echo "Build process completed successfully."
