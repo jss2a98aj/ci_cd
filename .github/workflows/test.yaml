@@ -10,8 +10,8 @@ concurrency:
 jobs:
   test-create:
     name: Create
-    uses: ./.github/workflows/test/create-upload.yaml
+    uses: ./.github/workflows/create-upload.yaml
   test-verify:
     needs: test-create
     name: Test
-    uses: ./.github/workflows/test/download-verify.yaml
+    uses: ./.github/workflows/download-verify.yaml
