@@ -1,7 +1,7 @@
 name: Create and Upload Artifact
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   create-file:
