@@ -1,5 +1,4 @@
-# Stage 1: Base environment setup using Ubuntu 22.04
-FROM ubuntu:22.04 AS base
+FROM fedora:40 AS base
 
 WORKDIR /root
 
@@ -8,24 +7,24 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV SCON_VERSION=4.8.0
 
 # Install bash, curl, and other basic utilities
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash bzip2 curl file findutils gettext git make nano patch pkg-config unzip xz-utils \
-    && rm -rf /var/lib/apt/lists/*
+RUN dnf install -y \
+    bash bzip2 curl file findutils gettext git make nano patch pkg-config unzip xz \
+    && dnf clean all
 
 # Install Python and pip for SCons
-RUN apt-get update && apt-get install -y --no-install-recommends python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+RUN dnf install -y python3-pip \
+    && dnf clean all
 
 # Install SCons
 RUN pip install scons==${SCON_VERSION}
 
 # Install .NET SDK
-RUN apt-get update && apt-get install -y --no-install-recommends dotnet-sdk-8.0 \
-    && rm -rf /var/lib/apt/lists/*
+RUN dnf install -y dotnet-sdk-8.0 \
+    && dnf clean all
 
 # Install Wayland development tools
-RUN apt-get update && apt-get install -y --no-install-recommends wayland-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN dnf install -y wayland-devel \
+    && dnf clean all
 
 # Stage 2: Godot SDK setup
 FROM base AS godot_sdk
