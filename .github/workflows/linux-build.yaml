@@ -24,16 +24,16 @@ jobs:
       matrix:
         include: 
           - name: Linux X86_64
-            path: ${{ GODOT_SDK_LINUX_X86_64 }}
+            path: $GODOT_SDK_LINUX_X86_64
             type: x86_64
           - name: Linux X86_32
-            path: ${{ GODOT_SDK_LINUX_X86_32 }}
+            path: ${{ env.GODOT_SDK_LINUX_X86_32 }}
             type: x86_32
           - name: Linux ARM64
-            path: ${{ GODOT_SDK_LINUX_ARM64 }}
+            path: ${{ env.GODOT_SDK_LINUX_ARM64 }}
             type: arm64
           - name: Linux ARM32
-            path: ${{ GODOT_SDK_LINUX_ARM32 }}
+            path: ${{ env.GODOT_SDK_LINUX_ARM32 }}
             type: arm32
     steps:
       - name: Checkout Repository
@@ -47,37 +47,37 @@ jobs:
         id: naming
         run: |
           if [ "${MONO}" == "1" ]; then
-            echo "BASE_NAME=${{ PLATFORM }}-${{ matrix.type }}-mono" >> "$GITHUB_OUTPUT"
+            echo "BASE_NAME=${{ env.PLATFORM }}-${{ matrix.type }}-mono" >> "$GITHUB_OUTPUT"
             echo "STEP_NAME=${{ matrix.name }}/w Mono" >> "$GITHUB_OUTPUT"
           else
-            echo "BASE_NAME=${{ PLATFORM }}-${{ matrix.type }}" >> "$GITHUB_OUTPUT"
+            echo "BASE_NAME=${{ env.PLATFORM }}-${{ matrix.type }}" >> "$GITHUB_OUTPUT"
             echo "STEP_NAME=${{ matrix.name }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Download Mono Glue
-        if: ${{ MONO == '1' }}
+        if: ${{ env.MONO == '1' }}
         uses: actions/download-artifact@v3
         with:
           name: mono-glue
           path: /root/mono-glue
 
       - name: Setup Mono Glue
-        if: ${{ MONO == '1' }}
+        if: ${{ env.MONO == '1' }}
         run: |
           cp -r /root/mono-glue/GodotSharp/GodotSharp/Generated modules/mono/glue/GodotSharp/GodotSharp/
           cp -r /root/mono-glue/GodotSharp/GodotSharpEditor/Generated modules/mono/glue/GodotSharp/GodotSharpEditor/
 
       - name: Setup Path for ${{ steps.naming.outputs.STEP_NAME }}
         run: |
-          export PATH="${{ matrix.path }}/bin:${{ BASE_PATH }}"
+          export PATH="${{ matrix.path }}/bin:${{ env.BASE_PATH }}"
 
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         run: |
           if [ "${MONO}" == "1" ]; then
-            scons platform=${{ PLATFORM }} arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor
-            ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=${{ PLATFORM }}
+            scons platform=${{ env.PLATFORM }} arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor
+            ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=${{ env.PLATFORM }}
           else
-            scons platform=${{ PLATFORM }} arch=${{ matrix.type }} production=yes target=editor
+            scons platform=${{ env.PLATFORM }} arch=${{ matrix.type }} production=yes target=editor
           fi
 
       - uses: actions/upload-artifact@v3
@@ -92,11 +92,11 @@ jobs:
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Templates
         run: |
           if [ "${MONO}" == "1" ]; then
-            scons platform=${{ PLATFORM }} arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_debug
-            scons platform=${{ PLATFORM }} arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_release
+            scons platform=${{ env.PLATFORM }} arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_debug
+            scons platform=${{ env.PLATFORM }} arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_release
           else
-            scons platform=${{ PLATFORM }} arch=${{ matrix.type }} production=yes target=template_debug
-            scons platform=${{ PLATFORM }} arch=${{ matrix.type }} production=yes target=template_release
+            scons platform=${{ env.PLATFORM }} arch=${{ matrix.type }} production=yes target=template_debug
+            scons platform=${{ env.PLATFORM }} arch=${{ matrix.type }} production=yes target=template_release
           fi
 
       - uses: actions/upload-artifact@v3
