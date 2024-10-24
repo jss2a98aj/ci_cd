@@ -17,7 +17,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
-    gcc-c++-13.2.1-3 gcc-c++.i686 glibc-devel glibc-devel.i686 \
+    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
     libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing --best \
     --disablerepo=fedora
