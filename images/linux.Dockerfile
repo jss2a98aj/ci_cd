@@ -38,9 +38,11 @@ RUN apt-get install -y \
     libfreetype6-dev \
     libssl-dev \
     libc++-dev \
-    libc++abi-dev
+    libc++abi-dev \
+    yasm
 
 RUN apt-get install -y \
+    gcc-arm-linux-gnueabihf \
     gcc-multilib \
     g++-multilib \
     libc6-dev \
