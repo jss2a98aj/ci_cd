@@ -46,6 +46,7 @@ RUN apt-get install -y \
     yasm
 
 RUN apt-get install -y \
+    gcc-13-arm-linux-gnueabihf \
     gcc-arm-linux-gnueabihf \
     gcc-multilib \
     g++-multilib \
