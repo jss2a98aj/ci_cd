@@ -56,7 +56,7 @@ RUN apt-get install -y \
 
 RUN apt-get install -y python3-pip
 
-RUN pip install scons==${SCON_VERSION}
+RUN pip install scons==${SCON_VERSION} --user
 
 RUN apt-get install -y dotnet-sdk-8.0
 
