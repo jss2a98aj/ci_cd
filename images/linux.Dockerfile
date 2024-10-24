@@ -14,7 +14,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
     git make nano patch pkg-config unzip xz cmake gdb
 
-RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing
+RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
 
 # Install 32bit Deps seperately
