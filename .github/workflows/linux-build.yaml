@@ -30,16 +30,16 @@ jobs:
       matrix:
         include: 
           - name: Linux X86_64
-            path: $GODOT_SDK_LINUX_X86_64
+            path: /root/x86_64-godot-linux-gnu_sdk-buildroot
             type: x86_64
           - name: Linux X86_32
-            path: $GODOT_SDK_LINUX_X86_32
+            path: /root/i686-godot-linux-gnu_sdk-buildroot
             type: x86_32
           - name: Linux ARM64
-            path: $GODOT_SDK_LINUX_ARM64
+            path: /root/aarch64-godot-linux-gnu_sdk-buildroot
             type: arm64
           - name: Linux ARM32
-            path: $GODOT_SDK_LINUX_ARM32
+            path: /root/arm-godot-linux-gnueabihf_sdk-buildroot
             type: arm32
     steps:
       - name: Checkout Repository
