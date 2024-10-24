@@ -14,16 +14,36 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
     git make nano patch pkg-config unzip xz cmake gdb
 
-RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
+# RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
+
+RUN dnf install -y \
+        scons \
+        pkgconfig \
+        libX11-devel \
+        libXcursor-devel \
+        libXrandr-devel \
+        libXinerama-devel \
+        libXi-devel \
+        wayland-devel \
+        mesa-libGL-devel \
+        mesa-libGLU-devel \
+        alsa-lib-devel \
+        pulseaudio-libs-devel \
+        libudev-devel \
+        gcc-c++ \
+        libstdc++-static \
+        libatomic-static \
+        freetype-devel \
+        openssl-devel
 
 # Install 32bit Deps seperately
-RUN dnf install -y \
-    gcc-c++-13.2.1-3.fc39.x86_64 gcc-c++-13.2.1-3.fc39.i686 \
-    glibc-devel glibc-devel.i686 \
-    libcxx-devel libcxx \
-    libstdc++-devel-13.2.1-3.fc39.x86_64 libstdc++-devel-13.2.1-3.fc39.i686 \
-    --allowerasing
+#RUN dnf install -y \
+#    gcc-c++-13.2.1-3.fc39.x86_64 gcc-c++-13.2.1-3.fc39.i686 \
+#    glibc-devel glibc-devel.i686 \
+#    libcxx-devel libcxx \
+#    libstdc++-devel-13.2.1-3.fc39.x86_64 libstdc++-devel-13.2.1-3.fc39.i686 \
+#    --allowerasing
 
 
 
@@ -35,9 +55,6 @@ RUN pip install scons==${SCON_VERSION}
 
 # Install .NET SDK
 RUN dnf install -y dotnet-sdk-8.0
-
-# Install Wayland development tools
-RUN dnf install -y wayland-devel
 
 RUN dnf clean all
 
