@@ -22,7 +22,7 @@ RUN apt-get install -y \
     libxrandr-dev \
     libxinerama-dev \
     libxi-dev \
-    wayland-dev \
+    libwayland-dev \
     libgl-dev \
     libglu-dev \
     libasound2-dev \
