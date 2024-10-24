@@ -12,7 +12,8 @@ RUN dnf update -y
 # Install bash, curl, and other basic utilities
 RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
-    git make nano patch pkg-config unzip xz cmake gdb ccache patch yasm
+    git make nano patch pkg-config unzip \
+    xz cmake gdb ccache patch yasm mold
 
 # RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
@@ -41,7 +42,20 @@ RUN dnf install -y \
         libmpc-devel mpfr-devel gmp-devel clang \
         vulkan xz gcc  \
         parallel \
-        libxml2-devel
+        libxml2-devel \
+        embree3-devel \
+        enet-devel \
+        glslang-devel \
+        graphite2-devel \
+        harfbuzz-devel \
+        libicu-devel \
+        libsquish-devel \
+        libtheora-devel \
+        libvorbis-devel \
+        libwebp-devel \
+        libzstd-devel \
+        mbedtls-devel \
+        miniupnpc-devel
 
 RUN dnf install glibc-devel -y
 RUN dnf install libstdc++ libstdc++-devel -y
