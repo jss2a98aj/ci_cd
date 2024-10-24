@@ -12,8 +12,13 @@ RUN dnf update -y
 # Install bash, curl, and other basic utilities
 RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
-    git make nano patch pkg-config unzip xz gcc-c++ cmake gdb \
-    glibc-devel glibc-devel.i686 libcxx-devel libcxx libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 
+    git make nano patch pkg-config unzip xz cmake gdb
+
+# Install 32bit Deps seperately
+RUN dnf install -y \
+    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
+    libcxx-devel libcxx \
+    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686
 
 # Install Python and pip for SCons
 RUN dnf install -y python3-pip
