@@ -12,7 +12,7 @@ RUN dnf update -y
 # Install bash, curl, and other basic utilities
 RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
-    git make nano patch pkg-config unzip xz cmake gdb
+    git make nano patch pkg-config unzip xz cmake gdb ccache patch yasm
 
 # RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
@@ -35,18 +35,23 @@ RUN dnf install -y \
         libstdc++-static \
         libatomic-static \
         freetype-devel \
-        openssl-devel \
-        libcxx-devel libcxx
+        openssl openssl-devel \
+        libcxx-devel libcxx \
+        zlib-devel \
+        libmpc-devel mpfr-devel gmp-devel clang \
+        vulkan xz gcc  \
+        parallel \
+        libxml2-devel
 
 RUN dnf install glibc-devel -y
 RUN dnf install libstdc++ libstdc++-devel -y
 # Install 32bit Deps seperately
-#RUN dnf install -y \
-#    gcc-c++-13.2.1-3.fc39.x86_64 gcc-c++-13.2.1-3.fc39.i686 \
-#    glibc-devel glibc-devel.i686 \
-#    libcxx-devel libcxx \
-#    libstdc++-devel-13.2.1-3.fc39.x86_64 libstdc++-devel-13.2.1-3.fc39.i686 \
-#    --allowerasing
+RUN dnf install -y \
+    gcc-c++.i686 \
+    glibc-devel glibc-devel.i686 \
+    libcxx-devel libcxx \
+    libstdc++-devel libstdc++-devel.i686 \
+    --allowerasing
 
 
 
