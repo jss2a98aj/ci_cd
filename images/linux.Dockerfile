@@ -14,20 +14,40 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
     git make nano patch pkg-config unzip xz cmake gdb
 
-RUN dnf install -y hyperfine vulkan xz gcc gcc-c++ \
- zlib-devel libmpc-devel mpfr-devel gmp-devel clang \
- just parallel scons mold pkgconfig libX11-devel \
- libXcursor-devel libXrandr-devel libXinerama-devel \
- libXi-devel wayland-devel mesa-libGL-devel mesa-libGLU-devel \
- alsa-lib-devel pulseaudio-libs-devel libudev-devel libstdc++-static \
- libatomic-static cmake ccache patch libxml2-devel openssl openssl-devel git unzip yasm
+# RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
 
-# Install 32bit Deps seperately
 RUN dnf install -y \
-    gcc-c++.x86_64 gcc-c++.i686 glibc-devel.x86_64 glibc-devel.i686 \
-    libcxx-devel libcxx \
-    libstdc++-devel.x86_64 libstdc++-devel.i686 libstdc++.x86_64 libstdc++.i686 --allowerasing
+        scons \
+        pkgconfig \
+        libX11-devel \
+        libXcursor-devel \
+        libXrandr-devel \
+        libXinerama-devel \
+        libXi-devel \
+        wayland-devel \
+        mesa-libGL-devel \
+        mesa-libGLU-devel \
+        alsa-lib-devel \
+        pulseaudio-libs-devel \
+        libudev-devel \
+        gcc-c++ \
+        libstdc++-static \
+        libatomic-static \
+        freetype-devel \
+        openssl-devel \
+        libcxx-devel libcxx
+
+RUN dnf install glibc-devel -y
+RUN dnf install libstdc++ libstdc++-devel -y
+# Install 32bit Deps seperately
+#RUN dnf install -y \
+#    gcc-c++-13.2.1-3.fc39.x86_64 gcc-c++-13.2.1-3.fc39.i686 \
+#    glibc-devel glibc-devel.i686 \
+#    libcxx-devel libcxx \
+#    libstdc++-devel-13.2.1-3.fc39.x86_64 libstdc++-devel-13.2.1-3.fc39.i686 \
+#    --allowerasing
+
 
 
 # Install Python and pip for SCons
@@ -38,9 +58,6 @@ RUN pip install scons==${SCON_VERSION}
 
 # Install .NET SDK
 RUN dnf install -y dotnet-sdk-8.0
-
-# Install Wayland development tools
-RUN dnf install -y wayland-devel
 
 RUN dnf clean all
 
