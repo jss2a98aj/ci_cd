@@ -1,5 +1,5 @@
 # Stage 1: Base environment setup using Fedora 40
-FROM fedora:39 AS base
+FROM fedora:40 AS base
 
 WORKDIR /root
 
