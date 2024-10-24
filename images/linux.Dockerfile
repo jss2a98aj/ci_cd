@@ -1,4 +1,5 @@
-FROM ubuntu:latest AS base
+# Stage 1: Base environment setup using Fedora 40
+FROM fedora:39 AS base
 
 WORKDIR /root
 
@@ -6,62 +7,44 @@ ENV DOTNET_NOLOGO=1
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV SCON_VERSION=4.8.0
 
-RUN apt-get update -y && apt-get upgrade -y
+RUN dnf update -y
 
-RUN dpkg --add-architecture i386
+# Install bash, curl, and other basic utilities
+RUN dnf install -y --setopt=install_weak_deps=False \
+    bash bzip2 curl file findutils gettext \
+    git make nano patch pkg-config unzip xz cmake gdb
 
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test
-RUN apt-get update
+RUN dnf install -y hyperfine vulkan xz gcc gcc-c++ \
+ zlib-devel libmpc-devel mpfr-devel gmp-devel clang \
+ just parallel scons mold pkgconfig libX11-devel \
+ libXcursor-devel libXrandr-devel libXinerama-devel \
+ libXi-devel wayland-devel mesa-libGL-devel mesa-libGLU-devel \
+ alsa-lib-devel pulseaudio-libs-devel libudev-devel libstdc++-static \
+ libatomic-static cmake ccache patch libxml2-devel openssl openssl-devel git unzip
 
-RUN apt-get install -y --no-install-recommends \
-    bash bzip2 curl file python3-full gettext \
-    git make nano patch pkg-config unzip xz-utils cmake gdb
+
+# Install 32bit Deps seperately
+#RUN dnf install -y \
+#    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
+#    libcxx-devel libcxx \
+#    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing --best
 
 
-RUN apt-get install -y \
-    scons \
-    pkg-config \
-    libx11-dev \
-    libxcursor-dev \
-    libxrandr-dev \
-    libxinerama-dev \
-    libxi-dev \
-    libwayland-dev \
-    libgl-dev \
-    libglu-dev \
-    libasound2-dev \
-    libpulse-dev \
-    libudev-dev \
-    libgl1-mesa-dev \
-    libglu1-mesa-dev \
-    build-essential \
-    gcc \
-    g++ \
-    libatomic1 \
-    libfreetype6-dev \
-    libssl-dev \
-    libc++-dev \
-    libc++abi-dev \
-    yasm
+# Install Python and pip for SCons
+RUN dnf install -y python3-pip
 
-RUN apt-get install -y \
-    #gcc-13-arm-linux-gnueabihf \
-    #gcc-arm-linux-gnueabihf \
-    gcc-multilib \
-    g++-multilib \
-    libc6-dev \
-    libstdc++6 \
-    libx11-dev
+# Install SCons
+RUN pip install scons==${SCON_VERSION}
 
-RUN apt-get install -y python3-pip
+# Install .NET SDK
+RUN dnf install -y dotnet-sdk-8.0
 
-RUN pip install scons==${SCON_VERSION} --user
+# Install Wayland development tools
+RUN dnf install -y wayland-devel
 
-RUN apt-get install -y dotnet-sdk-8.0
+RUN dnf clean all
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
+# Stage 2: Godot SDK setup
 FROM base AS godot_sdk
 
 WORKDIR /root
