@@ -22,7 +22,7 @@ RUN dnf install -y \
     gcc-c++-13.2.1-3 gcc-c++.i686-13.2.1-3 \
     glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++-devel-13.2.1-3 libstdc++.i686-13.2.1-3 \
+    libstdc++-devel-13.2.1-3.fc39.x86_64 libstdc++-devel-13.2.1-3.fc39.i686 \
     --allowerasing
 
 
