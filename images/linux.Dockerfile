@@ -38,7 +38,7 @@ RUN dnf install -y \
         openssl-devel
 
 RUN dnf install glibc-devel.i686 glibc-devel.x86_64 -y
-RUN dnf install libstdc++.i686 -y
+RUN dnf install libstdc++.i686 libstdc++-devel.i686 -y
 # Install 32bit Deps seperately
 #RUN dnf install -y \
 #    gcc-c++-13.2.1-3.fc39.x86_64 gcc-c++-13.2.1-3.fc39.i686 \
