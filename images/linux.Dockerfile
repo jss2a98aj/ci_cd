@@ -8,6 +8,7 @@ ENV SCON_VERSION=4.8.0
 
 RUN apt-get update -y && apt-get upgrade -y
 
+RUN dpkg --add-architecture i386
 
 RUN apt-get install -y --no-install-recommends \
     bash bzip2 curl file gettext \
