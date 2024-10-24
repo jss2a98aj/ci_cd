@@ -29,6 +29,10 @@ RUN apt-get install -y \
     libasound2-dev \
     libpulse-dev \
     libudev-dev \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    build-essential \
+    gcc \
     g++ \
     libatomic1 \
     libfreetype6-dev \
@@ -39,9 +43,9 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     gcc-multilib \
     g++-multilib \
-    libc6-dev:i386 \
-    libstdc++6:i386 \
-    libx11-dev:i386
+    libc6-dev \
+    libstdc++6 \
+    libx11-dev
 
 RUN apt-get install -y python3-pip
 
