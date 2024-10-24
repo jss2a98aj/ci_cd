@@ -20,14 +20,14 @@ RUN dnf install -y hyperfine vulkan xz gcc gcc-c++ \
  libXcursor-devel libXrandr-devel libXinerama-devel \
  libXi-devel wayland-devel mesa-libGL-devel mesa-libGLU-devel \
  alsa-lib-devel pulseaudio-libs-devel libudev-devel libstdc++-static \
- libatomic-static cmake ccache patch libxml2-devel openssl openssl-devel git unzip
+ libatomic-static cmake ccache patch libxml2-devel openssl openssl-devel git unzip yasm
 
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
-    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
+    gcc-c++.x86_64 gcc-c++.i686 glibc-devel.x86_64 glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing
+    libstdc++-devel.x86_64 libstdc++-devel.i686 libstdc++.x86_64 libstdc++.i686 --allowerasing
 
 
 # Install Python and pip for SCons
