@@ -14,13 +14,17 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
     git make nano patch pkg-config unzip xz cmake gdb
 
+RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing
+
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
-    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
+    gcc-c++-13.2.1-3.fc39 gcc-c++.i686-13.2.1-3.fc39 \
+    glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing --best \
-    --disablerepo=updates
+    libstdc++-devel-13.2.1-3.fc39 libstdc++.i686-13.2.1-3.fc39 \
+    --allowerasing
+
 
 
 # Install Python and pip for SCons
