@@ -19,10 +19,10 @@ RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
-    gcc-c++-13.2.1-3.fc39 gcc-c++.i686-13.2.1-3.fc39 \
+    gcc-c++-13.2.1-3 gcc-c++.i686-13.2.1-3 \
     glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++-devel-13.2.1-3.fc39 libstdc++.i686-13.2.1-3.fc39 \
+    libstdc++-devel-13.2.1-3 libstdc++.i686-13.2.1-3 \
     --allowerasing
 
 
