@@ -58,12 +58,13 @@ RUN dnf install -y \
         miniupnpc-devel
 
 RUN dnf install glibc-devel -y
-RUN dnf install libstdc++ libstdc++-devel -y
+#RUN dnf install libstdc++ libstdc++-devel -y
 # Install 32bit Deps seperately
 RUN dnf install -y \
     gcc-c++.i686 \
     glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
+    libstdc++ libstdc++.i686 \
     libstdc++-devel libstdc++-devel.i686 \
     --allowerasing
 
