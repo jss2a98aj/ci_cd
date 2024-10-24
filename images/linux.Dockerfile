@@ -1,5 +1,5 @@
 # Stage 1: Base environment setup using Fedora 40
-FROM fedora:40 AS base
+FROM fedora:42 AS base
 
 WORKDIR /root
 
@@ -12,19 +12,15 @@ RUN dnf update -y
 # Install bash, curl, and other basic utilities
 RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
-    git make nano patch pkg-config unzip xz cmake gdb --best
+    git make nano patch pkg-config unzip xz cmake gdb
 
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
     gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++-devel libstdc++ libstdc++.i686 --allowerasing --best
+    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing --best
 
-# Bypass dnf search, it is not pulling the newest version it keeps trying to install 14.0.x
-RUN curl -O https://rpmfind.net/linux/fedora/linux/updates/40/Everything/x86_64/Packages/l/libstdc++-devel-14.2.1-3.fc40.i686.rpm \
-    && dnf install -y ./libstdc++-devel-14.2.1-3.fc40.i686.rpm \
-    && rm -f libstdc++-devel-14.2.1-3.fc40.i686.rpm
 
 # Install Python and pip for SCons
 RUN dnf install -y python3-pip
