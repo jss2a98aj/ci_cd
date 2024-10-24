@@ -32,10 +32,11 @@ RUN dnf install -y \
         pulseaudio-libs-devel \
         libudev-devel \
         gcc-c++ \
-        libstdc++-static \
+        #libstdc++-static \
         libatomic-static \
         freetype-devel \
-        openssl-devel
+        openssl-devel \
+        libcxx-devel libcxx
 
 RUN dnf install glibc-devel.i686 glibc-devel.x86_64 -y
 RUN dnf install libstdc++.i686 libstdc++-devel.i686 -y
