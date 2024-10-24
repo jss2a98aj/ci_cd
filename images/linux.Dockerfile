@@ -24,10 +24,10 @@ RUN dnf install -y hyperfine vulkan xz gcc gcc-c++ \
 
 
 # Install 32bit Deps seperately
-#RUN dnf install -y \
-#    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
-#    libcxx-devel libcxx \
-#    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing --best
+RUN dnf install -y \
+    gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
+    libcxx-devel libcxx \
+    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing
 
 
 # Install Python and pip for SCons
