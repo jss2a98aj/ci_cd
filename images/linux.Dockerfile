@@ -15,7 +15,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-get update
 
 RUN apt-get install -y --no-install-recommends \
-    bash bzip2 curl file gettext \
+    bash bzip2 curl file python3-full gettext \
     git make nano patch pkg-config unzip xz-utils cmake gdb
 
 
