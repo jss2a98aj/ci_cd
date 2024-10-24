@@ -19,7 +19,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 RUN dnf install -y \
     gcc-c++ gcc-c++.i686 glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++-devel libstdc++-devel.i686 libstdc++ libstdc++.i686 --allowerasing
+    libstdc++-devel libstdc++-devel.i686-14.2.1-3.fc40 libstdc++ libstdc++.i686 --allowerasing
 
 # Install Python and pip for SCons
 RUN dnf install -y python3-pip
