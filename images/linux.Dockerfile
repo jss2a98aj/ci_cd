@@ -33,6 +33,7 @@ RUN dnf install -y \
         pulseaudio-libs-devel \
         libudev-devel \
         gcc-c++ \
+        which \
         libstdc++-static \
         libatomic-static \
         freetype-devel \
@@ -89,14 +90,16 @@ FROM base AS godot_sdk
 
 WORKDIR /root
 
-ENV GODOT_SDK_VERSIONS="x86_64 i686 aarch64 arm"
+ENV GODOT_SDK_VERSIONS="x86_64 i686 aarch64 armv7"
 ENV BUILDROOT_REPO="https://github.com/godotengine/buildroot.git"
 
 # Clone the buildroot repository
-RUN git clone ${BUILDROOT_REPO} buildroot && cd buildroot
+RUN git clone ${BUILDROOT_REPO} buildroot
+
+RUN pwd
 
 # Build SDKs for each architecture https://github.com/godotengine/buildroot#using-buildroot-to-generate-sdks
-RUN cd buildroot && \
+RUN cd /root/buildroot && \
     for arch in $GODOT_SDK_VERSIONS; do \
         echo "Building SDK for $arch..." && \
         config_file="config-godot-$arch"; \
@@ -106,7 +109,7 @@ RUN cd buildroot && \
         rm -rf output && mkdir output && \
         make clean sdk && \
         # Determine correct naming for the SDK output directory and tar file
-        if [ "$arch" = "arm" ]; then \
+        if [ "$arch" = "armv7" ]; then \
             sdk_output_dir="output/images/arm-godot-linux-gnueabihf_sdk-buildroot"; \
             sdk_file="arm-godot-linux-gnueabihf_sdk-buildroot.tar.bz2"; \
         else \
