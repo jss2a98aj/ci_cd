@@ -32,15 +32,15 @@ jobs:
           - name: Linux X86_64
             path: /root/x86_64-godot-linux-gnu_sdk-buildroot
             type: x86_64
-          - name: Linux X86_32
-            path: /root/i686-godot-linux-gnu_sdk-buildroot
-            type: x86_32
+          # - name: Linux X86_32
+          #   path: /root/i686-godot-linux-gnu_sdk-buildroot
+          #   type: x86_32
           - name: Linux ARM64
             path: /root/aarch64-godot-linux-gnu_sdk-buildroot
             type: arm64
-          - name: Linux ARM32
-            path: /root/arm-godot-linux-gnueabihf_sdk-buildroot
-            type: arm32
+          # - name: Linux ARM32
+          #   path: /root/arm-godot-linux-gnueabihf_sdk-buildroot
+          #   type: arm32
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -85,10 +85,10 @@ jobs:
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         run: |
           if [ "$MONO" -eq 1 ]; then
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor use_llvm=yes linker=mold # builtin_embree=no builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor linker=mold builtin_embree=no builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor use_llvm=yes linker=mold # builtin_embree=no builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor linker=mold builtin_embree=no builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
           fi
 
       - uses: actions/upload-artifact@v3
