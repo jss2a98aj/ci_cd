@@ -85,10 +85,10 @@ jobs:
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         run: |
           if [ "$MONO" -eq 1 ]; then
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor use_static_cpp=no lto=none use_llvm=yes linker=lld
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor use_static_cpp=no lto=none linker=mold
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor use_static_cpp=no lto=none use_llvm=yes linker=lld
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor use_static_cpp=no lto=none linker=mold
           fi
 
       - uses: actions/upload-artifact@v3
