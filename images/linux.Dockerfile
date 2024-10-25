@@ -63,6 +63,7 @@ RUN dnf downgrade libstdc++ libstdc++-devel -y
 RUN dnf install -y \
     gcc-c++.i686 \
     glibc-devel.i686 \
+    glslang-devel.i686 \
     libstdc++-13.2.1-3.fc39.i686 \
     libstdc++-devel-13.2.1-3.fc39.i686 \
     --allowerasing
