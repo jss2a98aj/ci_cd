@@ -56,7 +56,9 @@ RUN dnf install -y \
         libzstd-devel \
         mbedtls-devel \
         miniupnpc-devel \
-        embree embree-devel
+        embree embree-devel \
+        glibc-devel \
+        libstdc++ libstdc++-devel
 
 # RUN dnf downgrade libstdc++ libstdc++-devel -y
 
@@ -88,23 +90,38 @@ FROM base AS godot_sdk
 WORKDIR /root
 
 ENV GODOT_SDK_VERSIONS="x86_64 i686 aarch64 arm"
-ENV GODOT_SDK_BASE_URL="https://downloads.tuxfamily.org/godotengine/toolchains/linux/2024-01-17"
-ENV GODOT_SDK_PATH="/root"
+ENV BUILDROOT_REPO="https://github.com/godotengine/buildroot.git"
 
-# Download and install Godot SDKs for various architectures
-RUN for arch in $GODOT_SDK_VERSIONS; do \
-    if [ "$arch" = "arm" ]; then \
-      sdk_file="arm-godot-linux-gnueabihf_sdk-buildroot.tar.bz2"; \
-    else \
-      sdk_file="${arch}-godot-linux-gnu_sdk-buildroot.tar.bz2"; \
-    fi; \
-    echo "Downloading SDK for $arch..." && \
-    curl -LO ${GODOT_SDK_BASE_URL}/$sdk_file && \
-    tar xf $sdk_file && \
-    rm -f $sdk_file && \
-    cd ${arch}-godot-linux-gnu_sdk-buildroot || cd arm-godot-linux-gnueabihf_sdk-buildroot && \
-    ./relocate-sdk.sh && \
-    cd /root; \
-done
+# Clone the buildroot repository
+RUN git clone ${BUILDROOT_REPO} buildroot
+
+# Build SDKs for each architecture https://github.com/godotengine/buildroot#using-buildroot-to-generate-sdks
+RUN cd buildroot && \
+    for arch in $GODOT_SDK_VERSIONS; do \
+        echo "Building SDK for $arch..." && \
+        config_file="configs/config-godot-$arch"; \
+        cp $config_file .config && \
+        make olddefconfig && \
+        # Move previous builds to avoid conflicts
+        rm -rf output && mkdir output && \
+        make clean sdk && \
+        # Determine correct naming for the SDK output directory and tar file
+        if [ "$arch" = "arm" ]; then \
+            sdk_output_dir="output/images/arm-godot-linux-gnueabihf_sdk-buildroot"; \
+            sdk_file="arm-godot-linux-gnueabihf_sdk-buildroot.tar.bz2"; \
+        else \
+            sdk_output_dir="output/images/${arch}-godot-linux-gnu_sdk-buildroot"; \
+            sdk_file="${arch}-godot-linux-gnu_sdk-buildroot.tar.gz"; \
+        fi; \
+        # Extract and execute relocate script
+        if [ -f "${sdk_output_dir}.tar.bz2" ] || [ -f "${sdk_output_dir}.tar.gz" ]; then \
+            echo "Extracting SDK for $arch..." && \
+            tar -xf "${sdk_file}" -C "${sdk_output_dir}" && \
+            rm -f "${sdk_file}" && \
+            cd "${sdk_output_dir}" && \
+            ./relocate-sdk.sh && \
+            cd /root/buildroot; \
+        fi; \
+    done
 
 CMD /bin/bash
