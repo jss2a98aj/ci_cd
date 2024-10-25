@@ -106,6 +106,9 @@ RUN git clone ${BUILDROOT_REPO} buildroot
 
 RUN pwd
 
+# For buildroot
+ENV FORCE_UNSAFE_CONFIGURE=1
+
 # Build SDKs for each architecture https://github.com/godotengine/buildroot#using-buildroot-to-generate-sdks
 RUN cd /root/buildroot && \
     for arch in $GODOT_SDK_VERSIONS; do \
