@@ -7,7 +7,7 @@ ENV DOTNET_NOLOGO=1
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV SCON_VERSION=4.8.0
 
-RUN dnf update -y
+#RUN dnf update -y
 
 # Install bash, curl, and other basic utilities
 RUN dnf install -y --setopt=install_weak_deps=False \
@@ -57,17 +57,12 @@ RUN dnf install -y \
         mbedtls-devel \
         miniupnpc-devel
 
-RUN dnf install glibc-devel -y
-
-RUN dnf install libstdc++ libstdc++-devel -y
-
-RUN dnf downgrade libstdc++ libstdc++-devel -y
+#RUN dnf downgrade libstdc++ libstdc++-devel -y
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
     gcc-c++.i686 \
-    glibc-devel glibc-devel.i686 \
-    libcxx-devel libcxx \
+    glibc-devel.i686 \
     libstdc++-13.2.1-3.fc39.i686 \
     libstdc++-devel-13.2.1-3.fc39.i686 \
     --allowerasing
@@ -78,7 +73,7 @@ RUN dnf install -y \
 RUN dnf install -y python3-pip
 
 # Install SCons
-RUN pip install scons==${SCON_VERSION}
+# RUN pip install scons==${SCON_VERSION}
 
 # Install .NET SDK
 RUN dnf install -y dotnet-sdk-8.0
