@@ -13,7 +13,7 @@ ENV SCON_VERSION=4.8.0
 RUN dnf install -y --setopt=install_weak_deps=False \
     bash bzip2 curl file findutils gettext \
     git make nano patch pkg-config unzip \
-    xz cmake gdb ccache patch yasm mold
+    xz cmake gdb ccache patch yasm mold lld
 
 # RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
