@@ -68,8 +68,8 @@ RUN dnf install -y \
     gcc-c++.i686 \
     glibc-devel glibc-devel.i686 \
     libcxx-devel libcxx \
-    libstdc++.i686 \
-    libstdc++-devel.i686 \
+    libstdc++-13.2.1-3.fc39.i686 \
+    libstdc++-devel-13.2.1-3.fc39.i686 \
     --allowerasing
 
 
