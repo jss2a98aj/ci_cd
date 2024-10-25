@@ -19,7 +19,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 
 
 RUN dnf install -y \
-        scons \
+#        scons \
         pkgconfig \
         libX11-devel \
         libXcursor-devel \
@@ -57,7 +57,7 @@ RUN dnf install -y \
         mbedtls-devel \
         miniupnpc-devel
 
-#RUN dnf downgrade libstdc++ libstdc++-devel -y
+RUN dnf downgrade libstdc++ libstdc++-devel -y
 
 # Install 32bit Deps seperately
 RUN dnf install -y \
@@ -73,7 +73,7 @@ RUN dnf install -y \
 RUN dnf install -y python3-pip
 
 # Install SCons
-# RUN pip install scons==${SCON_VERSION}
+RUN pip install scons==${SCON_VERSION}
 
 # Install .NET SDK
 RUN dnf install -y dotnet-sdk-8.0
