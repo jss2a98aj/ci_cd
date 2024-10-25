@@ -24,7 +24,8 @@ RUN dnf install -y \
     cpio \
     rsync \
     bc \
-    diffutils
+    diffutils \
+    perl perl-core perl-ExtUtils-MakeMaker
 
 RUN dnf install -y \
 #        scons \
