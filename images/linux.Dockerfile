@@ -93,13 +93,13 @@ ENV GODOT_SDK_VERSIONS="x86_64 i686 aarch64 arm"
 ENV BUILDROOT_REPO="https://github.com/godotengine/buildroot.git"
 
 # Clone the buildroot repository
-RUN git clone ${BUILDROOT_REPO} buildroot
+RUN git clone ${BUILDROOT_REPO} buildroot && cd buildroot
 
 # Build SDKs for each architecture https://github.com/godotengine/buildroot#using-buildroot-to-generate-sdks
 RUN cd buildroot && \
     for arch in $GODOT_SDK_VERSIONS; do \
         echo "Building SDK for $arch..." && \
-        config_file="configs/config-godot-$arch"; \
+        config_file="config-godot-$arch"; \
         cp $config_file .config && \
         make olddefconfig && \
         # Move previous builds to avoid conflicts
