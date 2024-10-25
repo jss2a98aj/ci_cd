@@ -17,6 +17,14 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 
 # RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
 
+# Needed for buildroot
+RUN dnf install -y \
+    wget \
+    which \
+    cpio \
+    rsync \
+    bc \
+    diffutils
 
 RUN dnf install -y \
 #        scons \
@@ -33,7 +41,6 @@ RUN dnf install -y \
         pulseaudio-libs-devel \
         libudev-devel \
         gcc-c++ \
-        which \
         libstdc++-static \
         libatomic-static \
         freetype-devel \
