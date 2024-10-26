@@ -21,7 +21,7 @@ RUN dnf install -y \
     alsa-lib-devel.i686 \
     pulseaudio-libs-devel.i686 \
     gcc-c++.i686 \
-    libstdc++.i686 \
+    libstdc++-13.2.1-3.fc39.i686 \
     libatomic-static.i686 \
     freetype-devel.i686 \
     openssl-devel.i686 \
