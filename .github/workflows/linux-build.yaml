@@ -80,15 +80,15 @@ jobs:
 
       - name: Setup Path for ${{ steps.naming.outputs.STEP_NAME }}
         run: |
-          export PATH="${{ matrix.path }}/bin:${{ steps.pathing.outputs.BASE_PATH }}"
+          echo "${{ matrix.path }}/bin" >> "$GITHUB_PATH"
 
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         run: |
           if [ "$MONO" -eq 1 ]; then
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor use_static_cpp=no lto=none linker=mold
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor use_static_cpp=no lto=none
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor use_static_cpp=no lto=none linker=mold
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor use_static_cpp=no lto=none
           fi
 
       - uses: actions/upload-artifact@v3
