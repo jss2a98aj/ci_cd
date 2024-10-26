@@ -61,7 +61,6 @@ RUN dnf install -y \
     gmp-devel.i686 \
     clang.i686 \
     libxml2-devel.i686 \
-    embree3-devel.i686 \
     enet-devel.i686 \
     glslang-devel.i686 \
     graphite2-devel.i686 \
