@@ -44,7 +44,7 @@ RUN dnf install -y \
     libzstd-devel.i686 \
     mbedtls-devel.i686 \
     miniupnpc-devel.i686 \
-    glibc-devel.i686
+    glibc-devel.i686 --best
 
     # Install bash, curl, and other basic utilities
     RUN dnf install -y --setopt=install_weak_deps=False \
