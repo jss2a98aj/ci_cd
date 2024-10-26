@@ -24,10 +24,21 @@ RUN dnf install -y \
     rsync \
     bc \
     diffutils \
-    perl perl-core perl-ExtUtils-MakeMaker
+    perl perl-core perl-ExtUtils-MakeMaker 
 
-    RUN dnf install -y \
-    pkgconfig.i686 \
+# Has no i686
+RUN dnf install -y \
+    pkgconfig \
+    libudev-devel \
+    openssl \
+    vulkan \
+    xz \
+    gcc \
+    parallel \
+    embree3-devel \
+    embree
+
+RUN dnf install -y \
     libX11-devel.i686 \
     libXcursor-devel.i686 \
     libXrandr-devel.i686 \
@@ -38,22 +49,17 @@ RUN dnf install -y \
     mesa-libGLU-devel.i686 \
     alsa-lib-devel.i686 \
     pulseaudio-libs-devel.i686 \
-    libudev-devel.i686 \
     gcc-c++.i686 \
     libstdc++.i686 \
     libatomic-static.i686 \
     freetype-devel.i686 \
-    openssl.i686 openssl-devel.i686 \
+    openssl-devel.i686 \
     libcxx-devel.i686 libcxx.i686 \
     zlib-devel.i686 \
     libmpc-devel.i686 \
     mpfr-devel.i686 \
     gmp-devel.i686 \
     clang.i686 \
-    vulkan.i686 \
-    xz.i686 \
-    gcc.i686 \
-    parallel.i686 \
     libxml2-devel.i686 \
     embree3-devel.i686 \
     enet-devel.i686 \
@@ -68,7 +74,6 @@ RUN dnf install -y \
     libzstd-devel.i686 \
     mbedtls-devel.i686 \
     miniupnpc-devel.i686 \
-    embree.i686 \
     glibc-devel.i686
 
 # Install Python and pip for SCons
