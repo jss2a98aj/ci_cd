@@ -68,18 +68,6 @@ RUN dnf install -y \
         libstdc++ libstdc++-devel
 
 
-RUN dnf downgrade libstdc++ libstdc++-devel gcc gcc-c++ --allowerasing -y
-# RUN dnf downgrade libstdc++ libstdc++-devel -y
-
-# Install 32bit Deps seperately
-RUN dnf install -y \
-    gcc-c++.i686 \
-    glibc-devel.i686 \
-    glslang-devel.i686 \
-    libstdc++-13.2.1-3.fc39.i686 \
-    libstdc++-devel-13.2.1-3.fc39.i686 \
-    --allowerasing
-
 # Install Python and pip for SCons
 RUN dnf install -y python3-pip
 
@@ -96,7 +84,7 @@ FROM base AS godot_sdk
 
 WORKDIR /root
 
-ENV GODOT_SDK_VERSIONS="x86_64 i686 aarch64 armv7"
+ENV GODOT_SDK_VERSIONS="x86_64 aarch64"
 ENV BUILDROOT_REPO="https://github.com/godotengine/buildroot.git"
 
 # Clone the buildroot repository
@@ -110,30 +98,62 @@ ENV FORCE_UNSAFE_CONFIGURE=1
 # Build SDKs for each architecture https://github.com/godotengine/buildroot#using-buildroot-to-generate-sdks
 RUN cd /root/buildroot && \
     for arch in $GODOT_SDK_VERSIONS; do \
-        echo "Building SDK for $arch..." && \
+        echo "::group::Building SDK for $arch" && \
+        echo "Setting up configuration for $arch..." && \
         config_file="config-godot-$arch"; \
         cp $config_file .config && \
         make olddefconfig && \
-        # Move previous builds to avoid conflicts
+        
+        # Clean up any previous builds
+        echo "::debug::Removing previous output directory for clean build" && \
         rm -rf output && mkdir output && \
+        
+        echo "Starting clean build for $arch..." && \
         make clean sdk && \
+        
         # Determine correct naming for the SDK output directory and tar file
         if [ "$arch" = "armv7" ]; then \
-            sdk_output_dir="output/images/arm-godot-linux-gnueabihf_sdk-buildroot"; \
+            sdk_output_dir="/root/${arch}-godot-linux-gnueabihf_sdk"; \
             sdk_file="arm-godot-linux-gnueabihf_sdk-buildroot.tar.bz2"; \
         else \
-            sdk_output_dir="output/images/${arch}-godot-linux-gnu_sdk-buildroot"; \
+            sdk_output_dir="/root/${arch}-godot-linux-gnu_sdk"; \
             sdk_file="${arch}-godot-linux-gnu_sdk-buildroot.tar.gz"; \
         fi; \
-        # Extract and execute relocate script
-        if [ -f "${sdk_output_dir}.tar.bz2" ] || [ -f "${sdk_output_dir}.tar.gz" ]; then \
-            echo "Extracting SDK for $arch..." && \
-            tar -xf "${sdk_file}" -C "${sdk_output_dir}" && \
-            rm -f "${sdk_file}" && \
+        
+        echo "::debug::Setting sdk_output_dir to ${sdk_output_dir} and sdk_file to ${sdk_file}" && \
+        
+        # Move and extract SDK to the specified output directory
+        if [ -f "output/images/${sdk_file}" ]; then \
+            echo "::group::Extracting SDK for $arch" && \
+            echo "Extracting SDK for $arch to ${sdk_output_dir}..." && \
+            mkdir -p "${sdk_output_dir}" && \
+            tar -xf "output/images/${sdk_file}" -C "${sdk_output_dir}" && \
+            rm -f "output/images/${sdk_file}" && \
             cd "${sdk_output_dir}" && \
             ./relocate-sdk.sh && \
-            cd /root/buildroot; \
+            cd /root/buildroot && \
+            echo "::endgroup::" && \
+        else \
+            echo "::warning::SDK file for $arch not found. Skipping extraction step." && \
         fi; \
-    done
+        
+        echo "::notice::SDK for $arch built and extracted to ${sdk_output_dir}" && \
+        echo "::endgroup::" && \
+    done && \
+    
+    # Log summary of all output directories
+    echo "::group::SDK Build Summary" && \
+    echo "SDKs have been built for the following architectures and are located at:" && \
+    for arch in $GODOT_SDK_VERSIONS; do \
+        if [ "$arch" = "armv7" ]; then \
+            sdk_output_dir="/root/${arch}-godot-linux-gnueabihf_sdk"; \
+        else \
+            sdk_output_dir="/root/${arch}-godot-linux-gnu_sdk"; \
+        fi; \
+        echo "::notice::${arch} SDK directory: ${sdk_output_dir}" && \
+    done && \
+    echo "::endgroup::" && \
+    echo "::notice::SDK build process complete. All logs are summarized above."
+
 
 CMD /bin/bash

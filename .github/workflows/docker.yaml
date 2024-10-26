@@ -13,18 +13,21 @@ jobs:
     strategy:
       matrix:
         include: 
-          - name: Linux Dockerfile
-            file: ./images/linux.Dockerfile
-            tag: linux
-          - name: Web Dockerfile
-            file: ./images/web.Dockerfile
-            tag: web
-          - name: Android Dockerfile
-            file: ./images/android.Dockerfile
-            tag: android
-          - name: Windows Dockerfile
-            file: ./images/windows.Dockerfile
-            tag: windows
+          - name: Linux 32bit Dockerfile
+            file: ./images/32bit.Dockerfile
+            tag: linux32
+          - name: Linux 64bit Dockerfile
+            file: ./images/64bit.Dockerfile
+            tag: linux64
+          # - name: Web Dockerfile
+          #   file: ./images/web.Dockerfile
+          #   tag: web
+          # - name: Android Dockerfile
+          #   file: ./images/android.Dockerfile
+          #   tag: android
+          # - name: Windows Dockerfile
+          #   file: ./images/windows.Dockerfile
+          #   tag: windows
     env:
       APP_NAME_BASE: "blazium"  # Define a global base app name
     steps:
