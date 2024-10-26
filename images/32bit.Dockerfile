@@ -9,35 +9,6 @@ ENV SCON_VERSION=4.8.0
 
 #RUN dnf update -y
 
-# Install bash, curl, and other basic utilities
-RUN dnf install -y --setopt=install_weak_deps=False \
-    bash bzip2 curl file findutils gettext \
-    git make nano patch pkg-config unzip \
-    xz cmake gdb ccache patch yasm mold lld
-
-
-# Needed for buildroot
-RUN dnf install -y \
-    wget \
-    which \
-    cpio \
-    rsync \
-    bc \
-    diffutils \
-    perl perl-core perl-ExtUtils-MakeMaker 
-
-# Has no i686
-RUN dnf install -y \
-    pkgconfig \
-    libudev-devel \
-    openssl \
-    vulkan \
-    xz \
-    gcc \
-    parallel \
-    embree3-devel \
-    embree
-
 RUN dnf install -y \
     libX11-devel.i686 \
     libXcursor-devel.i686 \
@@ -74,6 +45,35 @@ RUN dnf install -y \
     mbedtls-devel.i686 \
     miniupnpc-devel.i686 \
     glibc-devel.i686
+
+    # Install bash, curl, and other basic utilities
+    RUN dnf install -y --setopt=install_weak_deps=False \
+        bash bzip2 curl file findutils gettext \
+        git make nano patch pkg-config unzip \
+        xz cmake gdb ccache patch yasm mold lld
+    
+    
+    # Needed for buildroot
+    RUN dnf install -y \
+        wget \
+        which \
+        cpio \
+        rsync \
+        bc \
+        diffutils \
+        perl perl-core perl-ExtUtils-MakeMaker 
+    
+    # Has no i686
+    RUN dnf install -y \
+        pkgconfig \
+        libudev-devel \
+        openssl \
+        vulkan \
+        xz \
+        gcc \
+        parallel \
+        embree3-devel \
+        embree
 
 # Install Python and pip for SCons
 RUN dnf install -y python3-pip
