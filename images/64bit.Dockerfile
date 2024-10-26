@@ -103,14 +103,11 @@ RUN cd /root/buildroot && \
         config_file="config-godot-$arch"; \
         cp $config_file .config && \
         make olddefconfig && \
-        
         # Clean up any previous builds
         echo "::debug::Removing previous output directory for clean build" && \
         rm -rf output && mkdir output && \
-        
         echo "Starting clean build for $arch..." && \
         make clean sdk && \
-        
         # Determine correct naming for the SDK output directory and tar file
         if [ "$arch" = "armv7" ]; then \
             sdk_output_dir="/root/${arch}-godot-linux-gnueabihf_sdk"; \
@@ -119,9 +116,7 @@ RUN cd /root/buildroot && \
             sdk_output_dir="/root/${arch}-godot-linux-gnu_sdk"; \
             sdk_file="${arch}-godot-linux-gnu_sdk-buildroot.tar.gz"; \
         fi; \
-        
         echo "::debug::Setting sdk_output_dir to ${sdk_output_dir} and sdk_file to ${sdk_file}" && \
-        
         # Move and extract SDK to the specified output directory
         if [ -f "output/images/${sdk_file}" ]; then \
             echo "::group::Extracting SDK for $arch" && \
@@ -136,11 +131,9 @@ RUN cd /root/buildroot && \
         else \
             echo "::warning::SDK file for $arch not found. Skipping extraction step." && \
         fi; \
-        
         echo "::notice::SDK for $arch built and extracted to ${sdk_output_dir}" && \
         echo "::endgroup::" && \
     done && \
-    
     # Log summary of all output directories
     echo "::group::SDK Build Summary" && \
     echo "SDKs have been built for the following architectures and are located at:" && \
