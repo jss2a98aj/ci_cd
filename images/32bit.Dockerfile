@@ -21,12 +21,11 @@ RUN dnf install -y \
     alsa-lib-devel.i686 \
     pulseaudio-libs-devel.i686 \
     gcc-c++.i686 \
-    libstdc++-13.2.1-3.fc39.i686 \
     libatomic-static.i686 \
     freetype-devel.i686 \
     openssl-devel.i686 \
     libcxx-devel.i686 libcxx.i686 \
-    zlib-devel.i686 \
+    zlib-devel \
     libmpc-devel.i686 \
     mpfr-devel.i686 \
     gmp-devel.i686 \
@@ -50,7 +49,8 @@ RUN dnf install -y \
     RUN dnf install -y --setopt=install_weak_deps=False \
         bash bzip2 curl file findutils gettext \
         git make nano patch pkg-config unzip \
-        xz cmake gdb ccache patch yasm mold lld
+        xz cmake gdb ccache patch yasm mold lld \
+        zlib-devel
     
     
     # Needed for buildroot
@@ -70,7 +70,7 @@ RUN dnf install -y \
         openssl \
         vulkan \
         xz \
-        gcc \
+        gcc-14.0.1-0.15.fc40.x86_64 \
         parallel \
         embree3-devel \
         embree

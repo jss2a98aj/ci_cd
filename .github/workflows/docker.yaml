@@ -13,12 +13,9 @@ jobs:
     strategy:
       matrix:
         include: 
-          - name: Linux 32bit Dockerfile
-            file: ./images/32bit.Dockerfile
-            tag: linux32
-          - name: Linux 64bit Dockerfile
-            file: ./images/64bit.Dockerfile
-            tag: linux64
+          - name: Ubuntu 32bit Dockerfile
+            file: ./ubuntu/i386.Dockerfile
+            tag: Ubuntu32
           # - name: Web Dockerfile
           #   file: ./images/web.Dockerfile
           #   tag: web
