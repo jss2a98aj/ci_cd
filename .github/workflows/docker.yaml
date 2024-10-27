@@ -1,9 +1,11 @@
 name: Update Dockerfiles
 on:
+  repository_dispatch:
+    types: [update_dockerfiles]
   push:
     paths:
       - 'images/**'
-      - '.github/docker.yaml'
+      - 'ubuntu/**'
 
 
 jobs:
