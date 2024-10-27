@@ -31,10 +31,8 @@ RUN apt-get install -y --no-install-recommends \
         yasm 
 
 # Install packages needed for buildroot
-# switched out which for whereis 
 RUN apt-get install -y \
         wget \
-        whereis \
         cpio \
         rsync \
         bc \
