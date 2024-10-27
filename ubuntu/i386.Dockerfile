@@ -40,9 +40,7 @@ RUN apt-get install -y \
         perl:i386 \
         cmake-curses-gui \
         libtbb-dev \
-        libglfw3-dev \
-        libsquish-dev \
-        libembree-dev 
+        libglfw3-dev 
 
 
 # Install additional development dependencies (i386 specific)
