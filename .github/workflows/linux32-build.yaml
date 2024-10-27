@@ -72,6 +72,8 @@ jobs:
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         id: build_editor
         run: |
+          echo "::debug::Entering Directory ${{ github.event.client_payload.branch }}"
+          cd ${{ github.event.client_payload.branch }}
           echo "::group::Building Editor for ${{ steps.naming.outputs.STEP_NAME }}"
           if [ "$MONO" -eq 1 ]; then
             
@@ -96,8 +98,6 @@ jobs:
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Templates
         id: build_templates
         run: |
-          echo "::debug::Entering Directory ${{ github.event.client_payload.branch }}"
-          cd ${{ github.event.client_payload.branch }}
           echo "::group::Building Templates for ${{ steps.naming.outputs.STEP_NAME }}"
           if [ "$MONO" -eq 1 ]; then
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_debug
