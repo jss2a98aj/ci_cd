@@ -37,7 +37,12 @@ RUN apt-get install -y \
         rsync \
         bc \
         diffutils \
-        perl:i386 
+        perl:i386 \
+        cmake-curses-gui \
+        libtbb-dev \
+        libglfw3-dev \
+        libembree-dev 
+
 
 # Install additional development dependencies (i386 specific)
 RUN apt-get install -y \
