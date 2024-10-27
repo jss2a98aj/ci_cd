@@ -76,10 +76,10 @@ jobs:
         run: |
           echo "::group::Building Editor for ${{ steps.naming.outputs.STEP_NAME }}"
           if [ "$MONO" -eq 1 ]; then
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor
+            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
           fi
           echo "::endgroup::"
         continue-on-error: true

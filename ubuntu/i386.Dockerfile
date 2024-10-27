@@ -40,7 +40,9 @@ RUN apt-get install -y \
         perl:i386 \
         cmake-curses-gui \
         libtbb-dev \
-        libglfw3-dev 
+        libglfw3-dev \
+        libsquish-dev \
+        libembree-dev 
 
 
 # Install additional development dependencies (i386 specific)
@@ -83,7 +85,6 @@ RUN apt-get install -y \
         libminiupnpc-dev:i386 \
         libpcre2-dev:i386 \
         libzstd-dev:i386 \
-        libsquish-dev:i386 \
         libicu-dev:i386
 
 # Install other necessary packages
