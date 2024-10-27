@@ -72,8 +72,7 @@ RUN apt-get install -y \
 # Install other necessary packages
 RUN apt-get install -y \
             openssl \
-            parallel \
-            embree3 
+            parallel 
 
 # Optional: Set locale
 RUN apt-get install -y locales && \
