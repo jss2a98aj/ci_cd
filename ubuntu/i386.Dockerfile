@@ -31,15 +31,15 @@ RUN apt-get install -y --no-install-recommends \
         yasm 
 
 # Install packages needed for buildroot
+# switched out which for whereis 
 RUN apt-get install -y \
         wget \
-        which \
+        whereis \
         cpio \
         rsync \
         bc \
         diffutils \
-        perl \
-        libextutils-makemaker-perl 
+        perl:i386 
 
 # Install additional development dependencies (i386 specific)
 RUN apt-get install -y \
