@@ -15,8 +15,6 @@ RUN apt-get install -y --no-install-recommends \
         build-essential \
         gcc-multilib \
         g++-multilib \
-        lib32z1 \
-        lib32stdc++6 \
         curl \
         git \
         vim \
@@ -30,9 +28,7 @@ RUN apt-get install -y --no-install-recommends \
         cmake \
         gdb \
         ccache \
-        yasm \
-        mold \
-        lld 
+        yasm 
 
 # Install packages needed for buildroot
 RUN apt-get install -y \
@@ -48,6 +44,9 @@ RUN apt-get install -y \
 # Install additional development dependencies (i386 specific)
 RUN apt-get install -y \
         scons:i386 \
+        libc6:i386 \ 
+        libstdc++6:i386 \
+        libz1:i386 \
         pkg-config:i386 \
         libx11-dev:i386 \
         libxcursor-dev:i386 \
