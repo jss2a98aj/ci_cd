@@ -15,7 +15,7 @@ jobs:
         include: 
           - name: Ubuntu 32bit Dockerfile
             file: ./ubuntu/i386.Dockerfile
-            tag: Ubuntu32
+            tag: ubuntu32
           # - name: Web Dockerfile
           #   file: ./images/web.Dockerfile
           #   tag: web
