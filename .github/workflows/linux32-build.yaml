@@ -34,12 +34,10 @@ jobs:
             path: /root/arm-godot-linux-gnueabihf_sdk-buildroot
             type: arm32
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          repository: blazium-engine/blazium
-          ref: ${{ github.event.client_payload.branch }}
-          fetch-depth: 1
+      - name: Get Engine Repo from Branch ${{ github.event.client_payload.branch }}
+        run: |
+          git clone https://github.com/blazium-engine/blazium.git --depth 1 --branch ${{ github.event.client_payload.branch }} ${{ github.event.client_payload.branch }}
+      
 
       - name: Get BASE_PATH
         id: pathing
@@ -76,6 +74,7 @@ jobs:
         run: |
           echo "::group::Building Editor for ${{ steps.naming.outputs.STEP_NAME }}"
           if [ "$MONO" -eq 1 ]; then
+            
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
@@ -97,6 +96,8 @@ jobs:
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Templates
         id: build_templates
         run: |
+          echo "::debug::Entering Directory ${{ github.event.client_payload.branch }}"
+          cd ${{ github.event.client_payload.branch }}
           echo "::group::Building Templates for ${{ steps.naming.outputs.STEP_NAME }}"
           if [ "$MONO" -eq 1 ]; then
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_debug
@@ -106,7 +107,6 @@ jobs:
             scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=template_release
           fi
           echo "::endgroup::"
-        continue-on-error: true
 
       - uses: actions/upload-artifact@v3
         with:
