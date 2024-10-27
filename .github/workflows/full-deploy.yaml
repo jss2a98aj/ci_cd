@@ -12,24 +12,7 @@ jobs:
     name: Building Mono Glue for Mono Editor Builds
     uses: ./.github/workflows/monoglue.yaml
   linux32:
-    name: Building Linux 64bit Editors
+    name: Building Linux 32bit Editors
     uses: ./.github/workflows/linux32-build.yaml
     with:
       MONO: 0
-  linux64:
-    name: Building Linux 64bit Editors
-    uses: ./.github/workflows/linux64-build.yaml
-    with:
-      MONO: 0
-  linux32-mono:
-    needs: mono-glue
-    name: Building Linux 32bit Editors/w Mono
-    uses: ./.github/workflows/linux32-build.yaml
-    with:
-      MONO: 1
-  linux64-mono:
-    needs: mono-glue
-    name: Building Linux 32bit Editors/w Mono
-    uses: ./.github/workflows/linux64-build.yaml
-    with:
-      MONO: 1
