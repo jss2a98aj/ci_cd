@@ -68,6 +68,23 @@ RUN apt-get install -y \
         bzip2:i386 \
         zlib1g-dev:i386 
 
+RUN apt-get install -y \
+        libenet-dev:i386 \
+        libfreetype6-dev:i386 \
+        libpng-dev:i386 \
+        zlib1g-dev:i386 \
+        libgraphite2-dev:i386 \
+        libharfbuzz-dev:i386 \
+        libogg-dev:i386 \
+        libtheora-dev:i386 \
+        libvorbis-dev:i386 \
+        libwebp-dev:i386 \
+        libmbedtls-dev:i386 \
+        libminiupnpc-dev:i386 \
+        libpcre2-dev:i386 \
+        libzstd-dev:i386 \
+        libsquish-dev:i386 \
+        libicu-dev:i386
 
 # Install other necessary packages
 RUN apt-get install -y \

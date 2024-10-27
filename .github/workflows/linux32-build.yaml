@@ -23,7 +23,7 @@ jobs:
   setup-and-build:
     runs-on: ubuntu-latest
     container:
-      image: bioblaze/blazium-linux32:latest
+      image: bioblaze/blazium-ubuntu32:latest
     strategy:
       matrix:
         include: 
@@ -70,11 +70,6 @@ jobs:
           cp -r /root/mono-glue/GodotSharp/GodotSharp/Generated modules/mono/glue/GodotSharp/GodotSharp/
           cp -r /root/mono-glue/GodotSharp/GodotSharpEditor/Generated modules/mono/glue/GodotSharp/GodotSharpEditor/
           echo "::endgroup::"
-
-      - name: Setup Path for ${{ steps.naming.outputs.STEP_NAME }}
-        run: |
-          echo "${{ matrix.path }}/bin" >> "$GITHUB_PATH"
-          echo "::notice::Path for ${{ steps.naming.outputs.STEP_NAME }} set up successfully"
 
       - name: Build for ${{ steps.naming.outputs.STEP_NAME }} Editor
         id: build_editor
