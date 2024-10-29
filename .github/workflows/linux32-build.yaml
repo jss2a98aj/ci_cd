@@ -12,9 +12,7 @@ on:
         default: 0
 
 env:
-  GODOT_SDK_LINUX_X86_32: /root/i686-godot-linux-gnu_sdk-buildroot
-  GODOT_SDK_LINUX_ARM32: /root/arm-godot-linux-gnueabihf_sdk-buildroot
-  SCONSFLAGS: verbose=yes warnings=no progress=no
+  SCONSFLAGS: verbose=yes warnings=no progress=no platform=linuxbsd production=yes
   TERM: xterm
   PLATFORM: linuxbsd
   MONO: ${{ inputs.MONO }}
@@ -37,12 +35,6 @@ jobs:
       - name: Get Engine Repo from Branch ${{ github.event.client_payload.branch }}
         run: |
           git clone https://github.com/blazium-engine/blazium.git --depth 1 --branch ${{ github.event.client_payload.branch }} ${{ github.event.client_payload.branch }}
-      
-
-      - name: Get BASE_PATH
-        id: pathing
-        run: |
-          echo "BASE_PATH=$PATH" >> "$GITHUB_OUTPUT"
 
       - name: Setup Artifact Naming Scheme
         id: naming
@@ -75,12 +67,12 @@ jobs:
           echo "::debug::Entering Directory ${{ github.event.client_payload.branch }}"
           cd ${{ github.event.client_payload.branch }}
           echo "::group::Building Editor for ${{ steps.naming.outputs.STEP_NAME }}"
+          export PATH="${{ matrix.path }}/bin:${ORIGINAL_PATH}"
           if [ "$MONO" -eq 1 ]; then
-            
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=editor builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
+            scons $SCONSFLAGS arch=${{ matrix.type }} module_mono_enabled=yes target=editor
             ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=$PLATFORM
           else
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=editor builtin_enet=no builtin_freetype=no builtin_graphite=no builtin_harfbuzz=no builtin_libogg=no builtin_libpng=no builtin_libtheora=no builtin_libvorbis=no builtin_libwebp=no builtin_mbedtls=no builtin_miniupnpc=no builtin_pcre2=no builtin_zlib=no builtin_zstd=no
+            scons $SCONSFLAGS arch=${{ matrix.type }} target=editor
           fi
           echo "::endgroup::"
         continue-on-error: true
@@ -99,12 +91,13 @@ jobs:
         id: build_templates
         run: |
           echo "::group::Building Templates for ${{ steps.naming.outputs.STEP_NAME }}"
+          export PATH="${{ matrix.path }}/bin:${ORIGINAL_PATH}"
           if [ "$MONO" -eq 1 ]; then
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_debug
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes module_mono_enabled=yes target=template_release
+            scons $SCONSFLAGS arch=${{ matrix.type }} module_mono_enabled=yes target=template_debug
+            scons $SCONSFLAGS arch=${{ matrix.type }} module_mono_enabled=yes target=template_release
           else
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=template_debug
-            scons platform=$PLATFORM arch=${{ matrix.type }} production=yes target=template_release
+            scons $SCONSFLAGS arch=${{ matrix.type }} target=template_debug
+            scons $SCONSFLAGS arch=${{ matrix.type }} target=template_release
           fi
           echo "::endgroup::"
 

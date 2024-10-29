@@ -14,10 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include: 
-          - name: Ubuntu 32bit Dockerfile
-            file: ./ubuntu/i386.Dockerfile
-            tag: ubuntu32
+        include:
+          - name: Linux Dockerfile
+            file: ./images/linux.Dockerfile
+            tag: linux
+          # - name: Ubuntu 32bit Dockerfile
+          #   file: ./ubuntu/i386.Dockerfile
+          #   tag: ubuntu32
           # - name: Web Dockerfile
           #   file: ./images/web.Dockerfile
           #   tag: web
