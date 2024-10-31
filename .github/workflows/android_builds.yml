@@ -1,0 +1,147 @@
+name: 🤖 Android Builds
+on:
+  workflow_call:
+
+# Global Settings
+env:
+  # Used for the cache key. Add version suffix to force clean build.
+  GODOT_BASE_BRANCH: blazium-dev
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no generate_apk=yes module_text_server_fb_enabled=yes
+  BUILD_FLAG: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+  TEMPLATE_TYPE: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
+  BUILD_TYPE: ${{ github.event.client_payload.type || 'nightly' }}
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-android
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    runs-on: "ubuntu-20.04"
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Editor (target=editor, arch=arm64, ${{ env.BUILD_FLAG }})
+            cache-name: android-editor-arm64
+            target: editor
+            tests: false
+            sconsflags: arch=arm64 ${{ env.BUILD_FLAG }}
+
+          - name: Editor (target=editor, arch=arm32, ${{ env.BUILD_FLAG }})
+            cache-name: android-editor-arm32
+            target: editor
+            tests: false
+            sconsflags: arch=arm32 ${{ env.BUILD_FLAG }}
+
+          - name: Template (target=${{ env.TEMPLATE_TYPE }}, arch=arm64)
+            cache-name: android-template-arm64
+            target: ${{ env.TEMPLATE_TYPE }}
+            tests: false
+            sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+
+          - name: Template (target=${{ env.TEMPLATE_TYPE }}, arch=arm32)
+            cache-name: android-template-arm32
+            target: ${{ env.TEMPLATE_TYPE }}
+            tests: false
+            sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+
+          - name: Editor (target=editor, arch=x86_64, ${{ env.BUILD_FLAG }})
+            cache-name: android-editor-x86_64
+            target: editor
+            tests: false
+            sconsflags: arch=x86_64 ${{ env.BUILD_FLAG }}
+
+          - name: Editor (target=editor, arch=x86_32, ${{ env.BUILD_FLAG }})
+            cache-name: android-editor-x86_32
+            target: editor
+            tests: false
+            sconsflags: arch=x86_32 ${{ env.BUILD_FLAG }}
+
+          - name: Template (target=${{ env.TEMPLATE_TYPE }}, arch=x86_64)
+            cache-name: android-template-x86_64
+            target: ${{ env.TEMPLATE_TYPE }}
+            tests: false
+            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+
+          - name: Template (target=${{ env.TEMPLATE_TYPE }}, arch=x86_32)
+            cache-name: android-template-x86_32
+            target: ${{ env.TEMPLATE_TYPE }}
+            tests: false
+            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Restore Godot build cache
+        uses: ./.github/actions/godot-cache-restore
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Setup Python and SCons
+        uses: ./.github/actions/godot-deps
+
+      - name: Compilation
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: android
+          target: ${{ matrix.target }}
+          tests: ${{ matrix.tests }}
+
+      - name: Save Godot build cache
+        uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Generate Godot templates
+        if: matrix.target == 'template_release'
+        run: |
+          cd platform/android/java
+          ./gradlew generateGodotTemplates
+          cd ../../..
+          ls -l bin/
+
+      - name: Generate Godot Meta editor
+        if: matrix.target == 'editor'
+        run: |
+          cd platform/android/java
+          ./gradlew generateGodotEditor
+          cd ../../..
+          ls -l bin/android_editor_builds/
+
+      - name: Upload artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}
+
+      - name: Clear folder
+        run: |
+          rm -rf bin/android_editor_builds/*.*
+
+      - name: Generate Godot Meta editor
+        if: matrix.target == 'editor'
+        run: |
+          cd platform/android/java
+          ./gradlew generateGodotMetaEditor
+          cd ../../..
+          ls -l bin/android_editor_builds/
+
+      - name: Upload artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}-meta

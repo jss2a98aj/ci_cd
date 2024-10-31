@@ -1,0 +1,46 @@
+name: 🔗 GHA
+on:
+  schedule:
+    - cron: '0 0 * * *' # https://crontab.guru/#0_0_*_*_*
+  repository_dispatch:
+    types: [trigger_build]
+
+concurrency:
+  group: ci-${{github.actor}}-nightly-runner
+  cancel-in-progress: true
+
+jobs:
+
+  static-checks:
+    name: 📊 Static checks
+    uses: ./.github/workflows/static_checks.yml
+
+  android-build:
+    name: 🤖 Android
+    needs: static-checks
+    uses: ./.github/workflows/android_builds.yml
+
+  ios-build:
+    name: 🍏 iOS
+    needs: [static-checks, android-build]
+    uses: ./.github/workflows/ios_builds.yml
+
+  linux-build:
+    name: 🐧 Linux
+    needs: [static-checks, android-build] 
+    uses: ./.github/workflows/linux_builds.yml
+
+  macos-build:
+    name: 🍎 macOS
+    needs: [static-checks, android-build]
+    uses: ./.github/workflows/macos_builds.yml
+
+  windows-build:
+    name: 🏁 Windows
+    needs: [static-checks, android-build]
+    uses: ./.github/workflows/windows_builds.yml
+
+  web-build:
+    name: 🌐 Web
+    needs: [static-checks, android-build]
+    uses: ./.github/workflows/web_builds.yml
