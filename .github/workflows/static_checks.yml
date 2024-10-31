@@ -11,9 +11,12 @@ jobs:
     name: Code style, file formatting, and docs
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          submodules: recursive
           fetch-depth: 2
 
       - name: Install APT dependencies
