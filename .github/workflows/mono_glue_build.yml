@@ -1,7 +1,7 @@
 name: Mono Glue Build
 on:
   workflow_call:
-    output:
+    outputs:
       run_id:
         description: "Runner ID for downloading the mono-glue required files."
         value: ${{ github.event.workflow_run.id }}
