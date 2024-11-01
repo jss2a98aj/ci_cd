@@ -18,17 +18,17 @@ jobs:
     needs: static-checks
     uses: ./.github/workflows/web_builds.yml
 
-  monoglue-build:
-    name: Mono Glue
-    needs: static-checks
-    uses: ./.github/workflows/mono_glue_build.yml
+  # monoglue-build:
+  #   name: Mono Glue
+  #   needs: static-checks
+  #   uses: ./.github/workflows/mono_glue_build.yml
 
   android-build:
     name: 🤖 Android
-    needs: [static-checks, monoglue-build]
+    needs: [static-checks]
     uses: ./.github/workflows/android_builds.yml
-    with:
-      mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
+    # with:
+    #   mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
 
   ios-build:
     name: 🍏 iOS

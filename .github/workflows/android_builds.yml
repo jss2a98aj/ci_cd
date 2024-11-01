@@ -1,11 +1,11 @@
 name: 🤖 Android Builds
 on:
   workflow_call:
-    inputs:
-      mono_glue_run_id:
-        description: "Mono-Glue runner ID"
-        required: true
-        type: string
+    # inputs:
+    #   mono_glue_run_id:
+    #     description: "Mono-Glue runner ID"
+    #     required: true
+    #     type: string
 
 # Global Settings
 env:
@@ -15,15 +15,88 @@ env:
   BUILD_FLAG: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
   TEMPLATE_TYPE: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
   BUILD_TYPE: ${{ github.event.client_payload.type || 'nightly' }}
-  
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  TSAN_OPTIONS: suppressions=misc/error_suppressions/tsan.txt
+  TERM: 'xterm'
+  DISPLAY: ':0'
 concurrency:
   group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-android
   cancel-in-progress: true
 
 jobs:
+  build-monoglue:
+    runs-on: "ubuntu-20.04"
+    name: Editor Build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          submodules: recursive
+          fetch-depth: 2
+
+      # Install Linux dependencies for tests
+      - name: Linux dependencies for tests
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EB8B81E14DA65431D7504EA8F63F0F2B90935439
+          sudo add-apt-repository "deb https://ppa.launchpadcontent.net/kisak/turtle/ubuntu focal main"
+          sudo apt-get install -qq mesa-vulkan-drivers
+
+      # Install wayland-scanner dependency
+      - name: wayland-scanner dependency
+        run: |
+          sudo apt-get install libwayland-bin
+
+      # Free up disk space on the runner
+      - name: Free disk space on runner
+        run: |
+          echo "Disk usage before:" && df -h
+          sudo rm -rf /usr/local/lib/android
+          echo "Disk usage after:" && df -h
+
+      - name: Restore Godot build cache
+        uses: ./.github/actions/godot-cache-restore
+        with:
+          cache-name: monoglue-editor
+        continue-on-error: true
+
+      - name: Setup Python and SCons
+        uses: ./.github/actions/godot-deps
+
+      - name: Setup GCC problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Compilation
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: ${{ env.SCONSFLAGS }} verbose=yes warnings=no progress=no debug_symbols=no use_static_cpp=no module_mono_enabled=yes
+          platform: linuxbsd
+          target: editor
+          tests: false
+
+      - name: Save Godot build cache
+        uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: monoglue-editor
+        continue-on-error: true
+
+      - name: Generate C# glue
+        run: |
+          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue ./mono-glue
+
+      - name: Upload artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: monoglue-android
+          path: ./mono-glue/GodotSharp/GodotSharp/Generated
+
   build-android:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
+    needs: build-monoglue
     strategy:
       fail-fast: false
       matrix:
@@ -100,56 +173,56 @@ jobs:
             tests: false
             sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
 # BREAK FOR MONO
-          - name: Template (target=template_release, arch=arm64)
+          - name: Template/w Mono (target=template_release, arch=arm64, module_mono_enabled=yes)
             cache-name: android-release-template-arm64-mono
             target: template_release
             tests: false
             sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_debug, arch=arm32)
+          - name: Template/w Mono (target=template_debug, arch=arm32, module_mono_enabled=yes)
             cache-name: android-debug-template-arm32-mono
             target: template_debug
             tests: false
             sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_debug, arch=arm64)
+          - name: Template/w Mono (target=template_debug, arch=arm64, module_mono_enabled=yes)
             cache-name: android-debug-template-arm64-mono
             target: template_debug
             tests: false
             sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_release, arch=arm32)
+          - name: Template/w Mono (target=template_release, arch=arm32, module_mono_enabled=yes)
             cache-name: android-release-template-arm32-mono
             target: template_release
             tests: false
             sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_release, arch=x86_64)
+          - name: Template/w Mono (target=template_release, arch=x86_64, module_mono_enabled=yes)
             cache-name: android-template-x86_64-mono
             target: template_release
             tests: false
             sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_debug, arch=x86_64)
+          - name: Template/w Mono (target=template_debug, arch=x86_64, module_mono_enabled=yes)
             cache-name: android-debug-template-x86_64-mono
             target: template_debug
             tests: false
             sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_release, arch=x86_32)
+          - name: Template/w Mono (target=template_release, arch=x86_32, module_mono_enabled=yes)
             cache-name: android-template-x86_32-mono
             target: template_release
             tests: false
             sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
             mono: true
 
-          - name: Template (target=template_debug, arch=x86_32)
+          - name: Template/w Mono (target=template_debug, arch=x86_32, module_mono_enabled=yes)
             cache-name: android-debug-template-x86_32-mono
             target: template_debug
             tests: false
@@ -182,15 +255,10 @@ jobs:
 
       - name: Download artifact from previous workflow
         if: matrix.mono
-        id: download-artifact
-        uses: dawidd6/action-download-artifact@v6
+        uses: actions/download-artifact@v3
         with:
-          workflow_search: true
-          workflow: runner.yml
-          workflow_conclusion: success
-          name: monoglue-editor
+          name: monoglue-android
           path: modules/mono/glue/GodotSharp/GodotSharp/
-          run_id: ${{ github.event.inputs.mono_glue_run_id }}
 
       - name: Compilation
         uses: ./.github/actions/godot-build
