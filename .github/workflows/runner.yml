@@ -1,7 +1,5 @@
 name: 🔗 GHA
 on:
-  schedule:
-    - cron: '0 0 * * *' # https://crontab.guru/#0_0_*_*_*
   repository_dispatch:
     types: [trigger_build]
 
