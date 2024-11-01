@@ -1,11 +1,12 @@
 name: 📊 Static Checks
 on:
+  repository_dispatch:
   workflow_call:
 
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  
+
 concurrency:
   group: ci-${{github.actor}}-builder-static
   cancel-in-progress: true
