@@ -2,9 +2,6 @@ name: 📊 Static Checks
 on:
   workflow_call:
 
-env:
-  # Used for the cache key. Add version suffix to force clean build.
-  GODOT_BASE_BRANCH: blazium-dev
 
 concurrency:
   group: ci-${{github.actor}}-builder-static
@@ -14,6 +11,10 @@ jobs:
   static-checks:
     name: Code style, file formatting, and docs
     runs-on: ubuntu-22.04
+    env:
+      # Used for the cache key. Add version suffix to force clean build.
+      GODOT_BASE_BRANCH: blazium-dev
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

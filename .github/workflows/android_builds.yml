@@ -2,14 +2,7 @@ name: 🤖 Android Builds
 on:
   workflow_call:
 
-# Global Settings
-env:
-  # Used for the cache key. Add version suffix to force clean build.
-  GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no generate_apk=yes module_text_server_fb_enabled=yes
-  BUILD_FLAG: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-  TEMPLATE_TYPE: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
-  BUILD_TYPE: ${{ github.event.client_payload.type || 'nightly' }}
+
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-android
   cancel-in-progress: true
@@ -18,6 +11,13 @@ jobs:
   build-android:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
+    env:
+      GODOT_BASE_BRANCH: blazium-dev
+      SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no generate_apk=yes module_text_server_fb_enabled=yes
+      BUILD_FLAG: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+      TEMPLATE_TYPE: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
+      BUILD_TYPE: ${{ github.event.client_payload.type || 'nightly' }}
+      
     strategy:
       fail-fast: false
       matrix:
