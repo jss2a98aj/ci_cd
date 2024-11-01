@@ -65,7 +65,7 @@ jobs:
       - name: Compilation
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }} verbose=yes warnings=no progress=no debug_symbols=no use_static_cpp=no
+          sconsflags: ${{ env.SCONSFLAGS }} verbose=yes warnings=no progress=no debug_symbols=no use_static_cpp=no module_mono_enabled=yes
           platform: linuxbsd
           target: editor
           tests: false
@@ -78,7 +78,7 @@ jobs:
 
       - name: Generate C# glue
         run: |
-          ./bin/blazium.linuxbsd.editor.x86_64 --headless --generate-mono-glue /root/mono-glue
+          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue /root/mono-glue
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
