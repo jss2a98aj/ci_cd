@@ -87,9 +87,13 @@ jobs:
             artifact: true
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
           submodules: recursive
+          fetch-depth: 2
 
       - name: Set up Emscripten latest
         uses: mymindstorm/setup-emsdk@v14
