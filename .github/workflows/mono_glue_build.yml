@@ -78,10 +78,10 @@ jobs:
 
       - name: Generate C# glue
         run: |
-          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue /root/mono-glue
+          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue ./mono-glue
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
         with:
           name: monoglue-editor
-          path: /root/mono-glue/GodotSharp/GodotSharp/Generated
+          path: ./mono-glue/mono-glue/GodotSharp/GodotSharp/Generated
