@@ -30,20 +30,20 @@ jobs:
 
   ios-build:
     name: 🍏 iOS
-    needs: [static-checks, monoglue-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/ios_builds.yml
 
   linux-build:
     name: 🐧 Linux
-    needs: [static-checks, monoglue-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/linux_builds.yml
 
   macos-build:
     name: 🍎 macOS
-    needs: [static-checks, monoglue-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/macos_builds.yml
 
   windows-build:
     name: 🏁 Windows
-    needs: [static-checks, monoglue-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/windows_builds.yml
