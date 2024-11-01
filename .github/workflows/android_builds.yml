@@ -28,56 +28,48 @@ jobs:
             target: editor
             tests: false
             sconsflags: arch=arm64 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            build_flag: ${{ env.BUILD_FLAG }}
 
           - name: Editor (target=editor, arch=arm32, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
             cache-name: android-editor-arm32
             target: editor
             tests: false
             sconsflags: arch=arm32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            build_flag: ${{ env.BUILD_FLAG }}
 
           - name: Template (target=${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}, arch=arm64)
             cache-name: android-template-arm64
             target: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
             tests: false
             sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
-            template_type: ${{ env.TEMPLATE_TYPE }}
 
           - name: Template (target=${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}, arch=arm32)
             cache-name: android-template-arm32
             target: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
             tests: false
             sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
-            template_type: ${{ env.TEMPLATE_TYPE }}
 
           - name: Editor (target=editor, arch=x86_64, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
             cache-name: android-editor-x86_64
             target: editor
             tests: false
             sconsflags: arch=x86_64 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            build_flag: ${{ env.BUILD_FLAG }}
 
           - name: Editor (target=editor, arch=x86_32, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
             cache-name: android-editor-x86_32
             target: editor
             tests: false
             sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            build_flag: ${{ env.BUILD_FLAG }}
 
           - name: Template (target=${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}, arch=x86_64)
             cache-name: android-template-x86_64
             target: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
             tests: false
             sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
-            template_type: ${{ env.TEMPLATE_TYPE }}
 
           - name: Template (target=${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}, arch=x86_32)
             cache-name: android-template-x86_32
             target: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
             tests: false
             sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
-            template_type: ${{ env.TEMPLATE_TYPE }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
