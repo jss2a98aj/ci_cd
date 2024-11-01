@@ -27,6 +27,8 @@ jobs:
     name: 🤖 Android
     needs: [static-checks, monoglue-build]
     uses: ./.github/workflows/android_builds.yml
+    with:
+      mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
 
   ios-build:
     name: 🍏 iOS

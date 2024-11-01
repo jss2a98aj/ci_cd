@@ -1,7 +1,10 @@
 name: Mono Glue Build
 on:
   workflow_call:
-
+    output:
+      run_id:
+        description: "Runner ID for downloading the mono-glue required files."
+        value: ${{ github.event.workflow_run.id }}
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.

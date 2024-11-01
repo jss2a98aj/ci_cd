@@ -1,6 +1,11 @@
 name: 🤖 Android Builds
 on:
   workflow_call:
+    inputs:
+      mono_glue_run_id:
+        description: "Mono-Glue runner ID"
+        required: true
+        type: number
 
 # Global Settings
 env:
@@ -184,7 +189,7 @@ jobs:
           workflow_conclusion: success
           name: monoglue-editor
           path: modules/mono/glue/GodotSharp/GodotSharp/
-          workflow: mono_glue_build.yml
+          run_id: ${{ github.event.inputs.mono_glue_run_id }}
 
       - name: Compilation
         uses: ./.github/actions/godot-build
