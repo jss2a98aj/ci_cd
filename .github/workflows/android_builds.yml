@@ -5,7 +5,7 @@ on:
       mono_glue_run_id:
         description: "Mono-Glue runner ID"
         required: true
-        type: number
+        type: string
 
 # Global Settings
 env:
