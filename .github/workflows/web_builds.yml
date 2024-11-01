@@ -11,7 +11,7 @@ env:
   EM_CACHE_FOLDER: "emsdk-cache"
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-web
+  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-web
   cancel-in-progress: true
 
 jobs:
@@ -22,17 +22,67 @@ jobs:
       fail-fast: false
       matrix:
         include:
+
+          - name: Editor (target=editor)
+            cache-name: web-editor
+            target: editor
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || '' }}
+            tests: false
+            artifact: true
+
           - name: Template w/ threads (target=template_release, threads=yes)
             cache-name: web-template
             target: template_release
-            sconsflags: threads=yes
+            sconsflags: threads=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
             tests: false
             artifact: true
 
           - name: Template w/o threads (target=template_release, threads=no)
             cache-name: web-nothreads-template
             target: template_release
-            sconsflags: threads=no
+            sconsflags: threads=no ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            tests: false
+            artifact: true
+
+          - name: Template w/ threads (target=template_debug, threads=yes)
+            cache-name: web-debug-template
+            target: template_debug
+            sconsflags: threads=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            tests: false
+            artifact: true
+
+          - name: Template w/o threads (target=template_debug, threads=no)
+            cache-name: web-nothreads-debug-template
+            target: template_debug
+            sconsflags: threads=no ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            tests: false
+            artifact: true
+
+          - name: Template w/ threads (target=template_release, dlink_enabled=yes, threads=yes)
+            cache-name: web-dlink-template
+            target: template_release
+            sconsflags: threads=yes dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            tests: false
+            artifact: true
+
+          - name: Template w/o threads (target=template_release, dlink_enabled=yes, threads=no)
+            cache-name: web-nothreads-dlink-template
+            target: template_release
+            sconsflags: threads=no dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            tests: false
+            artifact: true
+
+          - name: Template w/ threads (target=template_debug, dlink_enabled=yes, threads=yes)
+            cache-name: web-dlink-debug-template
+            target: template_debug
+            sconsflags: threads=yes dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            tests: false
+            artifact: true
+
+          - name: Template w/o threads (target=template_debug, dlink_enabled=yes, threads=no)
+            cache-name: web-nothreads-dlink-debug-template
+            target: template_debug
+            sconsflags: threads=no dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
             tests: false
             artifact: true
 
@@ -77,6 +127,5 @@ jobs:
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
-        if: ${{ matrix.artifact }}
         with:
           name: ${{ matrix.cache-name }}

@@ -59,15 +59,27 @@ jobs:
             tests: false
             sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
 
-          - name: Template (target=${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}, arch=x86_64)
+          - name: Template (target=template_release, arch=x86_64)
             cache-name: android-template-x86_64
-            target: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
+            target: template_release
             tests: false
             sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
 
-          - name: Template (target=${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}, arch=x86_32)
+          - name: Template (target=template_debug, arch=x86_64)
+            cache-name: android-template-x86_64-debug
+            target: template_debug
+            tests: false
+            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+
+          - name: Template (target=template_release, arch=x86_32)
             cache-name: android-template-x86_32
-            target: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
+            target: template_release
+            tests: false
+            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+
+          - name: Template (target=template_debug, arch=x86_32)
+            cache-name: android-template-x86_32-debug
+            target: template_debug
             tests: false
             sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
     steps:
@@ -109,7 +121,7 @@ jobs:
         continue-on-error: true
 
       - name: Generate Godot templates
-        if: matrix.target == 'template_release'
+        if: matrix.target == 'template_release' || matrix.target == 'template_debug' 
         run: |
           cd platform/android/java
           ./gradlew generateGodotTemplates
@@ -127,7 +139,7 @@ jobs:
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ matrix.cache-name }}
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
 
       - name: Clear folder
         run: |
@@ -144,4 +156,4 @@ jobs:
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ matrix.cache-name }}-meta
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}-meta
