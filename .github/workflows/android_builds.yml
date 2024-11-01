@@ -177,8 +177,11 @@ jobs:
 
       - name: Download artifact from previous workflow
         if: matrix.mono
-        uses: actions/download-artifact@v3
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v6
         with:
+          workflow_search: false
+          workflow_conclusion: success
           name: monoglue-editor
           path: modules/mono/glue/GodotSharp/GodotSharp/
 
