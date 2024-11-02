@@ -25,78 +25,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-monoglue:
-    runs-on: "ubuntu-20.04"
-    name: Mono-Glue Build
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          repository: blazium-engine/blazium
-          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
-          submodules: recursive
-          fetch-depth: 2
-
-      # Install Linux dependencies for tests
-      - name: Linux dependencies for tests
-        run: |
-          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EB8B81E14DA65431D7504EA8F63F0F2B90935439
-          sudo add-apt-repository "deb https://ppa.launchpadcontent.net/kisak/turtle/ubuntu focal main"
-          sudo apt-get install -qq mesa-vulkan-drivers
-
-      # Install wayland-scanner dependency
-      - name: wayland-scanner dependency
-        run: |
-          sudo apt-get install libwayland-bin
-
-      # Free up disk space on the runner
-      - name: Free disk space on runner
-        run: |
-          echo "Disk usage before:" && df -h
-          sudo rm -rf /usr/local/lib/android
-          echo "Disk usage after:" && df -h
-
-      - name: Restore Godot build cache
-        uses: ./.github/actions/godot-cache-restore
-        with:
-          cache-name: monoglue-editor
-        continue-on-error: true
-
-      - name: Setup Python and SCons
-        uses: ./.github/actions/godot-deps
-
-      - name: Setup GCC problem matcher
-        uses: ammaraskar/gcc-problem-matcher@master
-
-      - name: Compilation
-        uses: ./.github/actions/godot-build
-        with:
-          sconsflags: ${{ env.SCONSFLAGS }} verbose=yes warnings=no progress=no debug_symbols=no use_static_cpp=no module_mono_enabled=yes
-          platform: linuxbsd
-          target: editor
-          tests: false
-
-      - name: Save Godot build cache
-        uses: ./.github/actions/godot-cache-save
-        with:
-          cache-name: monoglue-editor
-        continue-on-error: true
-
-      - name: Generate C# glue
-        run: |
-          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue ./mono-glue
-
-      - name: Upload artifact
-        uses: ./.github/actions/upload-artifact
-        with:
-          name: monoglue-android
-          path: ./mono-glue/GodotSharp/GodotSharp/Generated
-
-  build-android:
+   build-android:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
-    needs: build-monoglue
     strategy:
       fail-fast: false
       matrix:
@@ -253,12 +184,20 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
-      - name: Download artifact from previous workflow
+      - name: Download and extract mono-glue
         if: matrix.mono
-        uses: actions/download-artifact@v3
-        with:
-          name: monoglue-android
-          path: modules/mono/glue/GodotSharp/GodotSharp/
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/mono-glue/mono-glue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o mono-glue.tar.gz
+
+          # Create target directory if it doesn't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp/
+
+          # Extract the tar.gz file to the target directory
+          tar -xzvf mono-glue.tar.gz -C modules/mono/glue/GodotSharp/GodotSharp/
 
       - name: Compilation
         uses: ./.github/actions/godot-build
