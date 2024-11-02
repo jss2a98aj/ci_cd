@@ -12,21 +12,25 @@ jobs:
   static-checks:
     name: 📊 Static checks
     uses: ./.github/workflows/static_checks.yml
+    secrets: inherit
 
   web-build:
     name: 🌐 Web
     needs: static-checks
     uses: ./.github/workflows/web_builds.yml
+    secrets: inherit
 
   monoglue-build:
     name: Mono Glue
     needs: static-checks
     uses: ./.github/workflows/mono_glue_build.yml
+    secrets: inherit
 
   android-build:
     name: 🤖 Android
     needs: [static-checks, monoglue-build]
     uses: ./.github/workflows/android_builds.yml
+    secrets: inherit
     # with:
     #   mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
 
@@ -34,18 +38,22 @@ jobs:
     name: 🍏 iOS
     needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/ios_builds.yml
+    secrets: inherit
 
   linux-build:
     name: 🐧 Linux
     needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/linux_builds.yml
+    secrets: inherit
 
   macos-build:
     name: 🍎 macOS
     needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/macos_builds.yml
+    secrets: inherit
 
   windows-build:
     name: 🏁 Windows
     needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/windows_builds.yml
+    secrets: inherit
