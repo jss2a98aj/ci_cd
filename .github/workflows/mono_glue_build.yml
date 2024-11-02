@@ -83,8 +83,15 @@ jobs:
         run: |
           ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue ./mono-glue
 
-      - name: Upload artifact
-        uses: ./.github/actions/upload-artifact
+      - name: Create tar.gz Archive
+        run: |
+          tar -czvf mono-glue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./mono-glue/GodotSharp/GodotSharp/Generated .
+
+      - uses: BetaHuhn/do-spaces-action@v2
         with:
-          name: monoglue-editor
-          path: ./mono-glue/GodotSharp/GodotSharp/Generated
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: mono-glue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          out_dir: ${{ github.event.client_payload.type || 'nightly' }}/mono-glue

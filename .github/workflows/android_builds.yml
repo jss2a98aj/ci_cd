@@ -27,7 +27,7 @@ concurrency:
 jobs:
   build-monoglue:
     runs-on: "ubuntu-20.04"
-    name: Editor Build
+    name: Mono-Glue Build
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

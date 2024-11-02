@@ -18,38 +18,34 @@ jobs:
     needs: static-checks
     uses: ./.github/workflows/web_builds.yml
 
-  # monoglue-build:
-  #   name: Mono Glue
-  #   needs: static-checks
-  #   uses: ./.github/workflows/mono_glue_build.yml
+  monoglue-build:
+    name: Mono Glue
+    needs: static-checks
+    uses: ./.github/workflows/mono_glue_build.yml
 
   android-build:
     name: 🤖 Android
-    needs: [static-checks]
+    needs: [static-checks, monoglue-build]
     uses: ./.github/workflows/android_builds.yml
     # with:
     #   mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
 
   ios-build:
     name: 🍏 iOS
-    # needs: [static-checks, monoglue-build, android-build]
-    needs: [static-checks, android-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/ios_builds.yml
 
   linux-build:
     name: 🐧 Linux
-    # needs: [static-checks, monoglue-build, android-build]
-    needs: [static-checks, android-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/linux_builds.yml
 
   macos-build:
     name: 🍎 macOS
-    # needs: [static-checks, monoglue-build, android-build]
-    needs: [static-checks, android-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/macos_builds.yml
 
   windows-build:
     name: 🏁 Windows
-    # needs: [static-checks, monoglue-build, android-build]
-    needs: [static-checks, android-build]
+    needs: [static-checks, monoglue-build, android-build]
     uses: ./.github/workflows/windows_builds.yml
