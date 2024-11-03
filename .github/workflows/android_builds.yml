@@ -29,7 +29,7 @@ jobs:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
     strategy:
-      max-parallel: 9
+      max-parallel: 4
       fail-fast: false
       matrix:
         include:
