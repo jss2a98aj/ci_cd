@@ -6,9 +6,7 @@ on:
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes
-  IOS_SDK: 17.5
-  IOS_LIPO: /root/ioscross/arm64/bin/arm-apple-darwin11-lipo
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
   TERM: xterm
 
 concurrency:
@@ -25,12 +23,12 @@ jobs:
         include:
           - name: Template
             cache-name: ios-template
-            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}  strict_checks=yes
             mono: false
 
           - name: Template/w MONO
             cache-name: ios-template-mono
-            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}  strict_checks=yes
             mono: true
 
 
@@ -124,7 +122,7 @@ jobs:
           zip -q -9 -r "${HERE}/ios.zip" *
           cd "${HERE}"
           rm -rf ios_xcode
-          
+
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
         with:
