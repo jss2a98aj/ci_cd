@@ -6,21 +6,42 @@ on:
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no module_text_server_fb_enabled=yes
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes
+  IOS_SDK: 17.5
+  IOS_LIPO: /root/ioscross/arm64/bin/arm-apple-darwin11-lipo
+  TERM: xterm
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-ios
+  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-ios
   cancel-in-progress: true
 
 jobs:
   ios-template:
     runs-on: "macos-latest"
-    name: Template (target=template_release)
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Template
+            cache-name: ios-template
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}
+            mono: false
+
+          - name: Template/w MONO
+            cache-name: ios-template-mono
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}
+            mono: true
+
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
           submodules: recursive
+          fetch-depth: 2
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -29,17 +50,83 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
-      - name: Compilation (arm64)
+      - name: Download and extract mono-glue
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/mono-glue/mono-glue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o mono-glue.tar.gz
+
+          # Create target directory if it doesn't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp/
+
+          # Extract the tar.gz file to the target directory
+          tar -xzvf mono-glue.tar.gz -C modules/mono/glue/GodotSharp/GodotSharp/
+
+      - name: Compilation (template_release, arm64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }}
+          sconsflags: arch=arm64 ios_simulator=no ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: ios
           target: template_release
+          tests: false
+
+      - name: Compilation (template_debug, arm64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=arm64 ios_simulator=no ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: ios
+          target: template_debug
+          tests: false
+
+      - name: Compilation (template_release, x86_64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=x86_64 ios_simulator=yes ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: ios
+          target: template_release
+          tests: false
+
+      - name: Compilation (template_debug, x86_64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=x86_64 ios_simulator=yes ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: ios
+          target: template_debug
           tests: false
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
         continue-on-error: true
 
+      - name: Setup Template
+        run: |
+            mkdir -p ./ios/${{ github.event.client_payload.type || 'nightly' }}/templates
+            cp bin/libgodot.ios.template_release.arm64.a ./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.a
+            cp bin/libgodot.ios.template_debug.arm64.a ./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.debug.a
+            cp bin/libgodot.ios.template_release.x86_64.simulator.a ./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.simulator.a
+            cp bin/libgodot.ios.template_debug.x86_64.simulator.a ./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.debug.simulator.a
+
+      - name: Create Template
+        run: |
+          rm -rf ios_xcode
+          HERE=$(pwd)
+          cp -r misc/dist/ios_xcode ios_xcode
+          cp "./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.simulator.a" ios_xcode/libgodot.ios.release.xcframework/ios-arm64_x86_64-simulator/libgodot.a
+          cp "./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.debug.simulator.a" ios_xcode/libgodot.ios.debug.xcframework/ios-arm64_x86_64-simulator/libgodot.a
+          cp "./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.a" ios_xcode/libgodot.ios.release.xcframework/ios-arm64/libgodot.a
+          cp "./ios/${{ github.event.client_payload.type || 'nightly' }}/templates/libgodot.ios.debug.a" ios_xcode/libgodot.ios.debug.xcframework/ios-arm64/libgodot.a
+          cp -r deps/moltenvk/MoltenVK/MoltenVK.xcframework ios_xcode/
+          rm -rf ios_xcode/MoltenVK.xcframework/{macos,tvos}*
+          cd ios_xcode
+          zip -q -9 -r "${HERE}/ios.zip" *
+          cd "${HERE}"
+          rm -rf ios_xcode
+          
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          path: "./ios.zip"

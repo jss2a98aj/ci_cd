@@ -2,6 +2,8 @@ name: 🔗 GHA
 on:
   repository_dispatch:
     types: [trigger_build]
+env:
+  BASE_NAME: Blazium_v
 
 concurrency:
   group: ci-${{github.actor}}-nightly-runner
@@ -36,24 +38,24 @@ jobs:
 
   ios-build:
     name: 🍏 iOS
-    needs: [static-checks, monoglue-build, android-build]
+    needs: [static-checks, monoglue-build]
     uses: ./.github/workflows/ios_builds.yml
     secrets: inherit
 
   linux-build:
     name: 🐧 Linux
-    needs: [static-checks, monoglue-build, android-build]
+    needs: [static-checks, monoglue-build, android-build, ios-build]
     uses: ./.github/workflows/linux_builds.yml
     secrets: inherit
 
   macos-build:
     name: 🍎 macOS
-    needs: [static-checks, monoglue-build, android-build]
+    needs: [static-checks, monoglue-build, android-build, ios-build]
     uses: ./.github/workflows/macos_builds.yml
     secrets: inherit
 
   windows-build:
     name: 🏁 Windows
-    needs: [static-checks, monoglue-build, android-build]
+    needs: [static-checks, monoglue-build, android-build, ios-build]
     uses: ./.github/workflows/windows_builds.yml
     secrets: inherit
