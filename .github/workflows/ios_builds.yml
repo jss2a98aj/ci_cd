@@ -6,7 +6,7 @@ on:
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes strict_checks=yes
   TERM: xterm
 
 concurrency:
@@ -15,20 +15,21 @@ concurrency:
 
 jobs:
   ios-template:
-    runs-on: "macos-13"
+    runs-on: macos-12
     name: ${{ matrix.name }}
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         include:
           - name: Template
             cache-name: ios-template
-            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}  strict_checks=yes
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}
             mono: false
 
           - name: Template/w MONO
             cache-name: ios-template-mono
-            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}  strict_checks=yes
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes use_lto=no' || '' }}
             mono: true
 
 
@@ -40,6 +41,10 @@ jobs:
           ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
           submodules: recursive
           fetch-depth: 2
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '13.1'
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -74,7 +79,7 @@ jobs:
       - name: Compilation (template_debug, arm64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: arch=arm64 ios_simulator=no ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          sconsflags: arch=arm64 ios_simulator=yes ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: ios
           target: template_debug
           tests: false
