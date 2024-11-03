@@ -61,104 +61,104 @@ jobs:
             cache-name: android-release-template-arm64
             target: template_release
             tests: false
-            sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=arm64 
 
           - name: Template (target=template_debug, arch=arm32)
             cache-name: android-debug-template-arm32
             target: template_debug
             tests: false
-            sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=arm32 
 
           - name: Template (target=template_debug, arch=arm64)
             cache-name: android-debug-template-arm64
             target: template_debug
             tests: false
-            sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=arm64 
 
           - name: Template (target=template_release, arch=arm32)
             cache-name: android-release-template-arm32
             target: template_release
             tests: false
-            sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=arm32 
 
           - name: Template (target=template_release, arch=x86_64)
             cache-name: android-template-x86_64
             target: template_release
             tests: false
-            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=x86_64 
 
           - name: Template (target=template_debug, arch=x86_64)
             cache-name: android-debug-template-x86_64
             target: template_debug
             tests: false
-            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=x86_64 
 
           - name: Template (target=template_release, arch=x86_32)
             cache-name: android-template-x86_32
             target: template_release
             tests: false
-            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=x86_32 
 
           - name: Template (target=template_debug, arch=x86_32)
             cache-name: android-debug-template-x86_32
             target: template_debug
             tests: false
-            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }}
+            sconsflags: arch=x86_32 
 # BREAK FOR MONO
           - name: Template/w Mono (target=template_release, arch=arm64, module_mono_enabled=yes)
             cache-name: android-release-template-arm64-mono
             target: template_release
             tests: false
-            sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=arm64  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_debug, arch=arm32, module_mono_enabled=yes)
             cache-name: android-debug-template-arm32-mono
             target: template_debug
             tests: false
-            sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=arm32  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_debug, arch=arm64, module_mono_enabled=yes)
             cache-name: android-debug-template-arm64-mono
             target: template_debug
             tests: false
-            sconsflags: arch=arm64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=arm64  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_release, arch=arm32, module_mono_enabled=yes)
             cache-name: android-release-template-arm32-mono
             target: template_release
             tests: false
-            sconsflags: arch=arm32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=arm32  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_release, arch=x86_64, module_mono_enabled=yes)
             cache-name: android-template-x86_64-mono
             target: template_release
             tests: false
-            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=x86_64  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_debug, arch=x86_64, module_mono_enabled=yes)
             cache-name: android-debug-template-x86_64-mono
             target: template_debug
             tests: false
-            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=x86_64  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_release, arch=x86_32, module_mono_enabled=yes)
             cache-name: android-template-x86_32-mono
             target: template_release
             tests: false
-            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=x86_32  module_mono_enabled=yes
             mono: true
 
           - name: Template/w Mono (target=template_debug, arch=x86_32, module_mono_enabled=yes)
             cache-name: android-debug-template-x86_32-mono
             target: template_debug
             tests: false
-            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && '' || 'debug_symbols=yes' }} module_mono_enabled=yes
+            sconsflags: arch=x86_32  module_mono_enabled=yes
             mono: true
 
     steps:
