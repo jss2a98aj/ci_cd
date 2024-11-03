@@ -30,7 +30,7 @@ jobs:
 
   android-build:
     name: 🤖 Android
-    needs: [static-checks, monoglue-build]
+    needs: [static-checks, monoglue-build, ios-build]
     uses: ./.github/workflows/android_builds.yml
     secrets: inherit
     # with:
