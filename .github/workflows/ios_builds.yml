@@ -54,6 +54,10 @@ jobs:
           mv MoltenVK/MoltenVK/include/ MoltenVK/
           mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
           popd
+          
+      - name: Setup Vulkan SDK
+        run: |
+          sh misc/scripts/install_vulkan_sdk_macos.sh
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore

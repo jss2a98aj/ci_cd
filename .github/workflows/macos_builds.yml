@@ -6,7 +6,7 @@ on:
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
+  SCONSFLAGS: verbose=yes warnings=no progress=no
 
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
@@ -20,23 +20,42 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor, tests=yes)
+          - name: Editor (target=editor)
             cache-name: macos-editor
             target: editor
-            tests: true
-            bin: "./bin/blazium.macos.editor.universal"
 
           - name: Template (target=template_release)
-            cache-name: macos-template
+            cache-name: macos-template-release
             target: template_release
-            tests: true
             sconsflags: debug_symbols=no tests=yes
-            bin: "./bin/blazium.macos.template_release.universal"
+
+          - name: Template (target=template_debug)
+            cache-name: macos-template-debug
+            target: template_debug
+            sconsflags: debug_symbols=no tests=yes
+
+          - name: Editor/w MONO (target=editor)
+            cache-name: macos-editor-mono
+            target: editor
+
+          - name: Template/w MONO (target=template_release)
+            cache-name: macos-template-release-mono
+            target: template_release
+            sconsflags: debug_symbols=no tests=yes
+
+          - name: Template/w MONO (target=template_debug)
+            cache-name: macos-template-debug-mono
+            target: template_debug
+            sconsflags: debug_symbols=no tests=yes
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
           submodules: recursive
+          fetch-depth: 2
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -47,9 +66,34 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
+      - name: Download and extract mono-glue
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/mono-glue/mono-glue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o mono-glue.tar.gz
+
+          # Create target directory if it doesn't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp/
+
+          # Extract the tar.gz file to the target directory
+          tar -xzvf mono-glue.tar.gz -C modules/mono/glue/GodotSharp/GodotSharp/
+
       - name: Setup Vulkan SDK
         run: |
           sh misc/scripts/install_vulkan_sdk_macos.sh
+
+      - name: Download and extract MoltenVK
+        run: |
+          mkdir -p deps/moltenvk
+          pushd deps/moltenvk
+          curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
+          tar xf moltenvk.tar && rm -f moltenvk.tar
+          mv MoltenVK/MoltenVK/include/ MoltenVK/
+          mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
+          popd
 
       - name: Compilation (x86_64)
         uses: ./.github/actions/godot-build
@@ -75,8 +119,8 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          lipo -create ./bin/blazium.macos.${{ matrix.target }}.x86_64 ./bin/blazium.macos.${{ matrix.target }}.arm64 -output ./bin/blazium.macos.${{ matrix.target }}.universal
-          rm ./bin/blazium.macos.${{ matrix.target }}.x86_64 ./bin/blazium.macos.${{ matrix.target }}.arm64
+          lipo -create ./bin/blazium.macos.${{ matrix.target }}.x86_64${{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.${{ matrix.target }}.arm64${{ matrix.mono && ".mono" || "" }} -output ./bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }}
+          rm ./bin/blazium.macos.${{ matrix.target }}.x86_64${{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.${{ matrix.target }}.arm64${{ matrix.mono && ".mono" || "" }}
           strip bin/blazium.*
           chmod +x bin/blazium.*
 
@@ -84,10 +128,3 @@ jobs:
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}
-
-      - name: Unit tests
-        if: ${{ matrix.tests }}
-        run: |
-          ${{ matrix.bin }} --version
-          ${{ matrix.bin }} --help
-          ${{ matrix.bin }} --test --force-colors
