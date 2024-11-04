@@ -88,7 +88,7 @@ jobs:
       - name: Compilation (template_debug, arm64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: arch=arm64 ios_simulator=yes ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          sconsflags: arch=arm64 ios_simulator=no ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: ios
           target: template_debug
           tests: false
