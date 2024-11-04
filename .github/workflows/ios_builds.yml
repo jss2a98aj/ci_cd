@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   ios-template:
-    runs-on: macos-13
+    runs-on: macos-latest
     name: ${{ matrix.name }}
     strategy:
       max-parallel: 1
@@ -42,9 +42,18 @@ jobs:
           submodules: recursive
           fetch-depth: 2
 
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '15.0.1'
+      # - uses: maxim-lobanov/setup-xcode@v1
+      #   with:
+      #     xcode-version: '15.0.1'
+
+      - name: Download and extract MoltenVK
+        run: |
+          pushd deps/moltenvk
+          curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
+          tar xf moltenvk.tar && rm -f moltenvk.tar
+          mv MoltenVK/MoltenVK/include/ MoltenVK/
+          mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
+          popd
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
