@@ -9,44 +9,28 @@ env:
   SCONSFLAGS: verbose=yes warnings=no progress=no
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
+  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-macos
   cancel-in-progress: true
 
 jobs:
-  build-macos:
+  build-editors:
     runs-on: "macos-latest"
     name: ${{ matrix.name }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor)
+          - name: Editor
             cache-name: macos-editor
             target: editor
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || '' }}
+            mono: false
 
-          - name: Template (target=template_release)
-            cache-name: macos-template-release
-            target: template_release
-            sconsflags: debug_symbols=no tests=yes
-
-          - name: Template (target=template_debug)
-            cache-name: macos-template-debug
-            target: template_debug
-            sconsflags: debug_symbols=no tests=yes
-
-          - name: Editor/w MONO (target=editor)
+          - name: Editor/w MONO
             cache-name: macos-editor-mono
             target: editor
-
-          - name: Template/w MONO (target=template_release)
-            cache-name: macos-template-release-mono
-            target: template_release
-            sconsflags: debug_symbols=no tests=yes
-
-          - name: Template/w MONO (target=template_debug)
-            cache-name: macos-template-debug-mono
-            target: template_debug
-            sconsflags: debug_symbols=no tests=yes
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || '' }}
+            mono: true
 
     steps:
       - name: Checkout Repository
@@ -84,32 +68,33 @@ jobs:
       - name: Setup Vulkan SDK
         run: |
           sh misc/scripts/install_vulkan_sdk_macos.sh
+          ls -la /usr/local
 
-      - name: Download and extract MoltenVK
-        run: |
-          mkdir -p deps/moltenvk
-          pushd deps/moltenvk
-          curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
-          tar xf moltenvk.tar && rm -f moltenvk.tar
-          mv MoltenVK/MoltenVK/include/ MoltenVK/
-          mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
-          popd
+      # - name: Download and extract MoltenVK
+      #   run: |
+      #     mkdir -p deps/moltenvk
+      #     pushd deps/moltenvk
+      #     curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
+      #     tar xf moltenvk.tar && rm -f moltenvk.tar
+      #     mv MoltenVK/MoltenVK/include/ MoltenVK/
+      #     mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
+      #     popd
 
-      - name: Compilation (x86_64)
+      - name: Editor Compilation (x86_64)
         uses: ./.github/actions/godot-build
         with:
           sconsflags: ${{ env.SCONSFLAGS }} arch=x86_64
           platform: macos
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
+          tests: false
 
-      - name: Compilation (arm64)
+      - name: Editor Compilation (arm64)
         uses: ./.github/actions/godot-build
         with:
           sconsflags: ${{ env.SCONSFLAGS }} arch=arm64
           platform: macos
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
+          tests: false
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
@@ -117,14 +102,162 @@ jobs:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
-      - name: Prepare artifact
+      - name: Prepare Editor
         run: |
           lipo -create ./bin/blazium.macos.${{ matrix.target }}.x86_64${{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.${{ matrix.target }}.arm64${{ matrix.mono && ".mono" || "" }} -output ./bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }}
+          ${{ matrix.mono && "./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=macos" || "" }}
           rm ./bin/blazium.macos.${{ matrix.target }}.x86_64${{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.${{ matrix.target }}.arm64${{ matrix.mono && ".mono" || "" }}
           strip bin/blazium.*
           chmod +x bin/blazium.*
 
-      - name: Upload artifact
+      - name: Package Editor
+        run: |
+          cp -r misc/dist/macos_tools.app ./Godot${{ matrix.mono && "_mono" || "" }}.app
+          mkdir -p Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
+          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
+          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Godot_mono.app/Contents/Resources/GodotSharp" || "" }}
+          chmod +x Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
+          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Godot{{ matrix.mono && "_mono" || "" }}.app
+          zip -q -9 -r "Blazium_macos.universal.zip" Godot{{ matrix.mono && "_mono" || "" }}.app
+
+      - name: Upload Editor artifact
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}
+          path: ./bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }}
+          
+      - name: Upload Packaged Editor artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}
+          path: Blazium_macos.universal.zip
+
+  build-templates:
+    runs-on: "macos-latest"
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Template
+            cache-name: macos-template
+            target: template_release
+            sconsflags: debug_symbols=no ${{ github.event.client_payload.production && 'production=yes' || '' }}
+
+          - name: Template/w MONO
+            cache-name: macos-template-mono
+            target: template_release
+            sconsflags: debug_symbols=no ${{ github.event.client_payload.production && 'production=yes' || '' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          submodules: recursive
+          fetch-depth: 2
+
+      - name: Restore Godot build cache
+        uses: ./.github/actions/godot-cache-restore
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Setup Python and SCons
+        uses: ./.github/actions/godot-deps
+
+      - name: Download and extract mono-glue
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/mono-glue/mono-glue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o mono-glue.tar.gz
+
+          # Create target directory if it doesn't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp/
+
+          # Extract the tar.gz file to the target directory
+          tar -xzvf mono-glue.tar.gz -C modules/mono/glue/GodotSharp/GodotSharp/
+
+      - name: Setup Vulkan SDK
+        run: |
+          sh misc/scripts/install_vulkan_sdk_macos.sh
+          ls -la /usr/local
+
+      # - name: Download and extract MoltenVK
+      #   run: |
+      #     mkdir -p deps/moltenvk
+      #     pushd deps/moltenvk
+      #     curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
+      #     tar xf moltenvk.tar && rm -f moltenvk.tar
+      #     mv MoltenVK/MoltenVK/include/ MoltenVK/
+      #     mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
+      #     popd
+
+
+
+      - name: Compilation (template_release, arm64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=arm64 ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: macos
+          target: template_release
+          tests: false
+
+      - name: Compilation (template_debug, arm64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=arm64 ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: macos
+          target: template_debug
+          tests: false
+
+      - name: Compilation (template_release, x86_64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=x86_64 ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: macos
+          target: template_release
+          tests: false
+
+      - name: Compilation (template_debug, x86_64)
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: arch=x86_64 ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: macos
+          target: template_debug
+          tests: false
+
+      - name: Save Godot build cache
+        uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Prepare Template
+        run: |
+          lipo -create ./bin/blazium.macos.template_release.x86_64{{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.template_release.arm64{{ matrix.mono && ".mono" || "" }} -output ./bin/blazium.macos.template_release.universal{{ matrix.mono && ".mono" || "" }}
+          lipo -create ./bin/blazium.macos.template_debug.x86_64{{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.template_debug.arm64{{ matrix.mono && ".mono" || "" }} -output ./bin/blazium.macos.template_debug.universal{{ matrix.mono && ".mono" || "" }}
+          rm ./bin/blazium.macos.template_release.x86_64{{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.template_release.arm64{{ matrix.mono && ".mono" || "" }}
+          rm ./bin/blazium.macos.template_debug.x86_64{{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.template_debug.arm64{{ matrix.mono && ".mono" || "" }}
+          strip bin/blazium.*
+          chmod +x bin/blazium.*
+
+      - name: Package Template
+        run: |
+          cp -r misc/dist/macos_template.app .
+          mkdir -p macos_template.app/Contents/{MacOS,Resources}
+          cp bin/blazium.macos.template_release.universal{{ matrix.mono && ".mono" || "" }} macos_template.app/Contents/MacOS/blazium_macos_release.universal{{ matrix.mono && ".mono" || "" }}
+          cp bin/blazium.macos.template_debug.universal{{ matrix.mono && ".mono" || "" }} macos_template.app/Contents/MacOS/blazium_macos_debug.universal{{ matrix.mono && ".mono" || "" }}
+          chmod +x macos_template.app/Contents/MacOS/blazium_macos*
+          ---
+          cp -r misc/dist/macos_tools.app ./Godot${{ matrix.mono && "_mono" || "" }}.app
+          mkdir -p Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
+          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
+          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Godot_mono.app/Contents/Resources/GodotSharp" || "" }}
+          chmod +x Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
+          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Godot{{ matrix.mono && "_mono" || "" }}.app
+          zip -q -9 -r "Blazium_macos.universal.zip" Godot{{ matrix.mono && "_mono" || "" }}.app

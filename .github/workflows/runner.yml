@@ -19,43 +19,50 @@ jobs:
   web-build:
     name: 🌐 Web
     needs: static-checks
+    if: ${{ github.event.client_payload.web_build == true }}
     uses: ./.github/workflows/web_builds.yml
     secrets: inherit
 
   monoglue-build:
     name: Mono Glue
     needs: static-checks
+    if: ${{ github.event.client_payload.monoglue_build == true }}
     uses: ./.github/workflows/mono_glue_build.yml
     secrets: inherit
 
   android-build:
     name: 🤖 Android
     needs: [static-checks, monoglue-build, ios-build, macos-build]
+    if: ${{ github.event.client_payload.android_build == true }}
     uses: ./.github/workflows/android_builds.yml
     secrets: inherit
     # with:
     #   mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
 
-  ios-build:
-    name: 🍏 iOS
-    needs: [static-checks, monoglue-build]
-    uses: ./.github/workflows/ios_builds.yml
-    secrets: inherit
+  # ios-build:
+  #   name: 🍏 iOS
+  #   needs: [static-checks, monoglue-build, macos-build]
+  #   if: ${{ github.event.client_payload.ios_build == true }}
+  #   uses: ./.github/workflows/ios_builds.yml
+  #   secrets: inherit
 
   linux-build:
     name: 🐧 Linux
     needs: [static-checks, monoglue-build, ios-build, macos-build]
+    if: ${{ github.event.client_payload.linux_build == true }}
     uses: ./.github/workflows/linux_builds.yml
     secrets: inherit
 
-  macos-build:
-    name: 🍎 macOS
-    needs: [static-checks, monoglue-build]
-    uses: ./.github/workflows/macos_builds.yml
-    secrets: inherit
+  # macos-build:
+  #   name: 🍎 macOS
+  #   needs: [static-checks, monoglue-build]
+  #   if: ${{ github.event.client_payload.macos_build == true }}
+  #   uses: ./.github/workflows/macos_builds.yml
+  #   secrets: inherit
 
   windows-build:
     name: 🏁 Windows
     needs: [static-checks, monoglue-build, ios-build, macos-build]
+    if: ${{ github.event.client_payload.windows_build == true }}
     uses: ./.github/workflows/windows_builds.yml
     secrets: inherit

@@ -19,7 +19,8 @@ jobs:
     runs-on: "ubuntu-22.04"
     name: ${{ matrix.name }}
     strategy:
-      fail-fast: false
+      max-parallel: 3
+      fail-fast: true
       matrix:
         include:
 
@@ -133,3 +134,56 @@ jobs:
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}
+
+      - name: Create ZIP Archive
+        run: |
+          zip -r ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.zip ./bin
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.zip
+          out_dir: web-editor/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+
+  deploy:
+    name: Deploying Web Editor to ${{ github.event.client_payload.type || 'nightly' }}
+    runs-on: ubuntu-latest
+    if: contains('nightly prerelease release', github.event.client_payload.type)
+    env:
+      APP_NAME_BASE: "blazium_web-editor"  # Define a global base app name
+      CDN_URL: "https://cdn.blazium.app/"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Download and extract web editor package
+        run: |
+          mkdir -p storage
+          curl -L "${{ env.CDN_URL }}web-editor/${{ github.event.client_payload.type || 'nightly' }}/web-editor-${{ github.event.client_payload.type || 'nightly' }}.zip" -o storage/web-editor.zip
+          unzip storage/web-editor.zip -d storage
+          inner_zip=$(find storage -type f -name 'blazium.web.editor.*.zip' | head -n 1)
+          mkdir -p ./web-editor/static
+          unzip "$inner_zip" -d ./web-editor/static
+          mv ./web-editor/static/blazium.editor.html ./web-editor/static/index.html
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          file: ./web-editor/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ github.event.client_payload.type || 'nightly' }}:latest
