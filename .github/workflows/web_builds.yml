@@ -152,6 +152,7 @@ jobs:
     name: Deploying Web Editor to ${{ github.event.client_payload.type || 'nightly' }}
     runs-on: ubuntu-latest
     if: contains('nightly prerelease release', github.event.client_payload.type)
+    needs: web-template
     env:
       APP_NAME_BASE: "blazium_web-editor"  # Define a global base app name
       CDN_URL: "https://cdn.blazium.app/"
