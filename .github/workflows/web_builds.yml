@@ -19,7 +19,7 @@ jobs:
     runs-on: "ubuntu-22.04"
     name: ${{ matrix.name }}
     strategy:
-      max-parallel: 3
+      max-parallel: 5
       fail-fast: true
       matrix:
         include:
@@ -185,6 +185,6 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          file: ./web-editor/Dockerfile
+          context: ./web-editor
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ github.event.client_payload.type || 'nightly' }}:latest
