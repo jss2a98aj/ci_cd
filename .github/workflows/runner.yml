@@ -109,34 +109,33 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [get-latest-sha, static-checks, monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
-    if: 
-      (
-        needs.monoglue-build.result == 'success' || needs.monoglue-build.result == 'skipped'
-      ) && (
-        needs.windows-build.result == 'success' || needs.windows-build.result == 'skipped'
-      ) && (
-        needs.macos-build.result == 'success' || needs.macos-build.result == 'skipped'
-      ) && (
-        needs.linux-build.result == 'success' || needs.linux-build.result == 'skipped'
-      ) && (
-        needs.android-build.result == 'success' || needs.android-build.result == 'skipped'
-      ) && (
-        needs.ios-build.result == 'success' || needs.ios-build.result == 'skipped'
-      ) && 
-      contains(['nightly', 'prerelease', 'release'], github.event.client_payload.type)   
+    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+    if: always()
     uses: ./.github/workflows/deploy_all.yml
     secrets: inherit
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      monoglue-build: ${{ needs.monoglue-build.result }}
+      windows-build: ${{ needs.windows-build.result }}
+      macos-build: ${{ needs.macos-build.result }}
+      linux-build: ${{ needs.linux-build.result }}
+      android-build: ${{ needs.android-build.result }}
+      ios-build: ${{ needs.ios-build.result }}
+
 
   cleanup:
     name: Clean Up
-    needs: [get-latest-sha, static-checks, monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
     if: always() && (failure() || cancelled())
     uses: ./.github/workflows/clean_up.yml
     secrets: inherit
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      monoglue-build: ${{ needs.monoglue-build.result }}
+      windows-build: ${{ needs.windows-build.result }}
+      macos-build: ${{ needs.macos-build.result }}
+      linux-build: ${{ needs.linux-build.result }}
+      android-build: ${{ needs.android-build.result }}
+      ios-build: ${{ needs.ios-build.result }}

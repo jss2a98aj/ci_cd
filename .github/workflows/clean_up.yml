@@ -10,6 +10,31 @@ on:
         description: "Runner ID of the Parent Runner"
         required: true
         type: string
+      monoglue-build:
+        description: "Build Status"
+        required: true
+        type: string
+      windows-build:
+        description: "Build Status"
+        required: true
+        type: string
+      macos-build:
+        description: "Build Status"
+        required: true
+        type: string
+      linux-build:
+        description: "Build Status"
+        required: true
+        type: string
+      android-build:
+        description: "Build Status"
+        required: true
+        type: string
+      ios-build:
+        description: "Build Status"
+        required: true
+        type: string
+        
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
