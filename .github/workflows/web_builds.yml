@@ -37,64 +37,46 @@ jobs:
             cache-name: web-editor
             target: editor
             sconsflags: use_closure_compiler=yes ${{ github.event.client_payload.production && 'production=yes' || '' }} 
-            tests: false
-            artifact: true
 
           - name: Template w/ threads (target=template_release, threads=yes)
             cache-name: web-template
             target: template_release
             sconsflags: threads=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/o threads (target=template_release, threads=no)
             cache-name: web-nothreads-template
             target: template_release
             sconsflags: threads=no ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/ threads (target=template_debug, threads=yes)
             cache-name: web-debug-template
             target: template_debug
             sconsflags: threads=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/o threads (target=template_debug, threads=no)
             cache-name: web-nothreads-debug-template
             target: template_debug
             sconsflags: threads=no ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/ threads (target=template_release, dlink_enabled=yes, threads=yes)
             cache-name: web-dlink-template
             target: template_release
             sconsflags: threads=yes dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/o threads (target=template_release, dlink_enabled=yes, threads=no)
             cache-name: web-nothreads-dlink-template
             target: template_release
             sconsflags: threads=no dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/ threads (target=template_debug, dlink_enabled=yes, threads=yes)
             cache-name: web-dlink-debug-template
             target: template_debug
             sconsflags: threads=yes dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
           - name: Template w/o threads (target=template_debug, dlink_enabled=yes, threads=no)
             cache-name: web-nothreads-dlink-debug-template
             target: template_debug
             sconsflags: threads=no dlink_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
-            tests: false
-            artifact: true
 
     steps:
       - name: Checkout Repository
@@ -123,7 +105,7 @@ jobs:
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
           build_type: ${{ startsWith(matrix.target, 'template_') && 'template' || 'editor' }}
-          mono: ${{ matrix.mono }}
+          mono: ${{ matrix.mono || false }}
           deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
           branch: ${{ github.event.client_payload.branch }}
           build_os: web
