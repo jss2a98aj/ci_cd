@@ -1,4 +1,4 @@
-name: steam Deploy
+name: Google Play Deploy
 on:
   workflow_call:
     inputs:
@@ -16,13 +16,13 @@ env:
   GODOT_BASE_BRANCH: blazium-dev
 
 concurrency:
-  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-steam-deploy
+  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-play-deploy
   cancel-in-progress: true
 
 jobs:
   build-monoglue:
     runs-on: "ubuntu-20.04"
-    name: Example for steam Deploy
+    name: Example for Google Play Deploy
     steps:
 
       - name: Testing
