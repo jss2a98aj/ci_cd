@@ -1,0 +1,64 @@
+name: Blazium Cerebro Build (Started)
+description: Update the State
+
+inputs:
+  name:
+    description: The artifact name.
+    required: true
+  run_id:
+    description: ID for the Whole Run.
+    required: true
+  build_type:
+    description: Template or Editor build type.
+    required: true
+  mono:
+    description: Whether Mono is enabled (true/false).
+    required: true
+  deploy_type:
+    description: The type of deployment (nightly, prerelease, release).
+    required: true
+  branch:
+    description: The branch name.
+    required: true
+  build_os:
+    description: The operating system for the build (e.g., Windows).
+    required: true
+  file_url:
+    description: The URL of the file.
+    required: false
+  checksum:
+    description: The SHA-256 checksum of the file.
+    required: true
+  production:
+    description: Whether the build is for production (true/false).
+    required: true
+  version:
+    description: The version of the build.
+    required: false
+  cerebro_url:
+    description: The full URL to send the update.
+    required: true
+  cerebro_auth:
+    description: Auth Key to Cerebro for Blazium.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Send Cerebro Update
+      shell: bash
+      run: |
+        curl -X POST "${{ inputs.cerebro_url }}/enginebuilds" \
+          -H "Content-Type: application/json" \
+          -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" \
+          -d '{
+                "name": "${{ inputs.name }}",
+                "run_id": "${{ inputs.run_id }}",
+                "build_type": "${{ inputs.build_type }}",
+                "mono": ${{ inputs.mono }},
+                "deploy_type": "${{ inputs.deploy_type }}",
+                "branch": "${{ inputs.branch }}",
+                "build_os": "${{ inputs.build_os }}",
+                "checksum": "${{ inputs.checksum }}",
+                "production": ${{ inputs.production }}
+              }'

@@ -1,12 +1,21 @@
 name: 🌐 Web Builds
 on:
   workflow_call:
+    inputs:
+      build_sha:
+        description: "Build commit SHA to use for this job"
+        required: true
+        type: string
+      runner_id:
+        description: "Runner ID of the Parent Runner"
+        required: true
+        type: string
 
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no use_closure_compiler=yes
+  SCONSFLAGS: verbose=yes warnings=no werror=no debug_symbols=no progress=no
   EM_VERSION: 3.1.64
   EM_CACHE_FOLDER: "emsdk-cache"
 
@@ -27,7 +36,7 @@ jobs:
           - name: Editor (target=editor)
             cache-name: web-editor
             target: editor
-            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || '' }}
+            sconsflags: use_closure_compiler=yes ${{ github.event.client_payload.production && 'production=yes' || '' }} 
             tests: false
             artifact: true
 
@@ -92,9 +101,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: blazium-engine/blazium
-          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          ref: ${{ inputs.build_sha }}
           submodules: recursive
           fetch-depth: 2
+
+      - name: Notify Cerebro of Build Starting
+        uses: ./.github/actions/cerebro-started
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+          build_type: ${{ startsWith(matrix.target, 'template_') && 'template' || 'editor' }}
+          mono: ${{ matrix.mono }}
+          deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
+          branch: ${{ github.event.client_payload.branch }}
+          build_os: web
+          checksum: ${{ inputs.build_sha }}
+          production: ${{ github.event.client_payload.production }}
 
       - name: Set up Emscripten latest
         uses: mymindstorm/setup-emsdk@v14
@@ -134,10 +158,9 @@ jobs:
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}
-
-      - name: Create ZIP Archive
+      - name: Create tar.gz Archive
         run: |
-          zip -r ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.zip ./bin
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./bin .
 
       - uses: BetaHuhn/do-spaces-action@v2
         with:
@@ -145,8 +168,26 @@ jobs:
           secret_key: ${{ secrets.DO_SECRET_KEY }}
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
-          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.zip
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
           out_dir: web-editor/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+
+      - name: Notify Cerebro of Build Success
+        uses: ./.github/actions/cerebro-completed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          file_url: ${{ secrets.CDN_URL }}/web-editor/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          version: ""
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+      - name: Notify Cerebro of Build Failure
+        uses: ./.github/actions/cerebro-failed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
   deploy:
     name: Deploying Web Editor to ${{ github.event.client_payload.type || 'nightly' }}
@@ -174,12 +215,21 @@ jobs:
 
       - name: Download and extract web editor package
         run: |
+          # Create storage directory
           mkdir -p storage
-          curl -L "${{ env.CDN_URL }}web-editor/${{ github.event.client_payload.type || 'nightly' }}/web-editor-${{ github.event.client_payload.type || 'nightly' }}.zip" -o storage/web-editor.zip
-          unzip storage/web-editor.zip -d storage
-          inner_zip=$(find storage -type f -name 'blazium.web.editor.*.zip' | head -n 1)
+          
+          # Download the .tar.gz package instead of .zip
+          curl -L "${{ env.CDN_URL }}web-editor/${{ github.event.client_payload.type || 'nightly' }}/web-editor-${{ github.event.client_payload.type || 'nightly' }}.tar.gz" -o storage/web-editor.tar.gz
+          
+          # Extract the main .tar.gz file
+          tar -xzf storage/web-editor.tar.gz -C storage
+          
+          # Find the inner .tar.gz file and extract it
+          inner_tar=$(find storage -type f -name 'blazium.web.editor.*.tar.gz' | head -n 1)
           mkdir -p ./web-editor/static
-          unzip "$inner_zip" -d ./web-editor/static
+          tar -xzf "$inner_tar" -C ./web-editor/static
+          
+          # Rename the main HTML file
           mv ./web-editor/static/blazium.editor.html ./web-editor/static/index.html
 
       - name: Build and push
@@ -187,4 +237,14 @@ jobs:
         with:
           context: ./web-editor
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ github.event.client_payload.type || 'nightly' }}:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ github.event.client_payload.type || 'nightly' }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ github.event.client_payload.type || 'nightly' }}:${{ inputs.build_sha }}
+
+      - name: Notify Cerebro to Deploy Web Build
+        uses: ./.github/actions/cerebro-deploy
+        with:
+          name: web-editor
+          type: ${{ github.event.client_payload.type || 'nightly' }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}

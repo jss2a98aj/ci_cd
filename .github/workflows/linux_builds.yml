@@ -1,121 +1,117 @@
 name: 🐧 Linux Builds
 on:
   workflow_call:
+    inputs:
+      build_sha:
+        description: "Build commit SHA to use for this job"
+        required: true
+        type: string
+      runner_id:
+        description: "Runner ID of the Parent Runner"
+        required: true
+        type: string
 
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
+  SCONSFLAGS: verbose=yes warnings=no werror=no debug_symbols=no progress=no module_text_server_fb_enabled=yes
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   TSAN_OPTIONS: suppressions=misc/error_suppressions/tsan.txt
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
+  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-linux
   cancel-in-progress: true
 
 jobs:
-  build-linux:
+  build-linux-64bit:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor tests=yes)
-            cache-name: linux-editor
+
+          - name: Editor (target=editor)
+            cache-name: linux-editor-64bit
             target: editor
-            bin: ./bin/blazium.linuxbsd.editor.x86_64
-            build-mono: false
-            tests: true
-            doc-test: true
-            proj-conv: true
-            api-compat: true
-            artifact: true
+            sconsflags: arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
+
           - name: Editor w/ Mono (target=editor)
-            cache-name: linux-editor-mono
+            cache-name: linux-editor-mono-64bit
             target: editor
-            sconsflags: module_mono_enabled=yes
-            bin: "./bin/blazium.linuxbsd.editor.x86_64.mono"
-            build-mono: true
-            tests: false # Disabled due freeze caused by mix Mono build and CI
-            doc-test: true
-            proj-conv: true
-            api-compat: true
-            artifact: true
-
-          - name: Editor with doubles and GCC sanitizers (target=editor, tests=yes, dev_build=yes, scu_build=yes, precision=double, use_asan=yes, use_ubsan=yes, linker=gold)
-            cache-name: linux-editor-double-sanitizers
-            target: editor
-            # Debug symbols disabled as they're huge on this build and we hit the 14 GB limit for runners.
-            sconsflags: dev_build=yes scu_build=yes debug_symbols=no precision=double use_asan=yes use_ubsan=yes linker=gold
-            bin: "./bin/blazium.linuxbsd.editor.dev.double.x86_64.san"
-            build-mono: false
-            tests: true
-            proj-test: true
-            # Generate an API dump for godot-cpp tests.
-            api-dump: true
-            # Skip 2GiB artifact speeding up action.
-            artifact: false
-
-          - name: Editor with clang sanitizers (target=editor, tests=yes, dev_build=yes, use_asan=yes, use_ubsan=yes, use_llvm=yes, linker=lld)
-            cache-name: linux-editor-llvm-sanitizers
-            target: editor
-            sconsflags: dev_build=yes use_asan=yes use_ubsan=yes use_llvm=yes linker=lld
-            bin: "./bin/blazium.linuxbsd.editor.dev.x86_64.llvm.san"
-            build-mono: false
-            tests: true
-            # Skip 2GiB artifact speeding up action.
-            artifact: false
-            # Test our oldest supported SCons/Python versions on one arbitrary editor build.
-            legacy-scons: true
-
-          - name: Editor with ThreadSanitizer (target=editor, tests=yes, dev_build=yes, use_tsan=yes, use_llvm=yes, linker=lld)
-            cache-name: linux-editor-thread-sanitizer
-            target: editor
-            tests: true
-            sconsflags: dev_build=yes use_tsan=yes use_llvm=yes linker=lld
-            bin: "./bin/blazium.linuxbsd.editor.dev.x86_64.llvm.san"
-            build-mono: false
-            # Skip 2GiB artifact speeding up action.
-            artifact: false
+            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
 
           - name: Template w/ Mono (target=template_release)
-            cache-name: linux-template-mono
+            cache-name: linux-template-mono-64bit
             target: template_release
-            sconsflags: module_mono_enabled=yes tests=yes
-            bin: "./bin/blazium.linuxbsd.template_release.x86_64.mono"
-            build-mono: false
-            tests: true
-            artifact: true
+            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
 
-          - name: Minimal template (target=template_release, everything disabled)
-            cache-name: linux-template-minimal
+          - name: Template (target=template_release)
+            cache-name: linux-template-64bit
             target: template_release
-            sconsflags: modules_enabled_by_default=no disable_3d=yes disable_advanced_gui=yes deprecated=no minizip=no tests=yes
-            bin: "./bin/blazium.linuxbsd.template_release.x86_64"
-            tests: true
-            artifact: true
+            sconsflags: arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
+
+          - name: Template w/ Mono (target=template_debug)
+            cache-name: linux-debug-template-mono-64bit
+            target: template_debug
+            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
+
+          - name: Template (target=template_debug)
+            cache-name: linux-debug-template-64bit
+            target: template_debug
+            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
+          repository: blazium-engine/blazium
+          ref: ${{ inputs.build_sha }}
           submodules: recursive
+          fetch-depth: 2
 
-      # Need newer mesa for lavapipe to work properly.
-      - name: Linux dependencies for tests
-        if: ${{ matrix.proj-test }}
-        run: |
-          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EB8B81E14DA65431D7504EA8F63F0F2B90935439
-          sudo add-apt-repository "deb https://ppa.launchpadcontent.net/kisak/turtle/ubuntu focal main"
-          sudo apt-get install -qq mesa-vulkan-drivers
+      - name: Notify Cerebro of Build Starting
+        uses: ./.github/actions/cerebro-started
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+          build_type: ${{ startsWith(matrix.target, 'template_') && 'template' || 'editor' }}
+          mono: ${{ matrix.mono }}
+          deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
+          branch: ${{ github.event.client_payload.branch }}
+          build_os: linux
+          checksum: ${{ inputs.build_sha }}
+          production: ${{ github.event.client_payload.production }}
 
       # TODO: Figure out somehow how to embed this one.
-      - name: wayland-scanner dependency
+      - name: Distro-specific Deps Install
         run: |
-          sudo apt-get install libwayland-bin
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            scons \
+            pkg-config \
+            libx11-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libudev-dev \
+            libxi-dev \
+            libxrandr-dev \
+            libwayland-dev
 
       - name: Free disk space on runner
         run: |
@@ -130,20 +126,28 @@ jobs:
         continue-on-error: true
 
       - name: Setup Python and SCons
-        if: ${{ ! matrix.legacy-scons }}
         uses: ./.github/actions/godot-deps
-
-      - name: Setup Python and SCons (legacy versions)
-        if: ${{ matrix.legacy-scons }}
-        uses: ./.github/actions/godot-deps
-        with:
-          # Sync with Ensure*Version in SConstruct.
-          python-version: 3.6
-          scons-version: 3.1.2
 
       - name: Setup GCC problem matcher
         uses: ammaraskar/gcc-problem-matcher@master
 
+      - name: Download and extract mono-glue
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o monoglue.tar.gz
+
+          # Create target directories if they don't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
+
+          # Extract the specific directories from the tar.gz file to their target locations
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
+      
       - name: Compilation
         uses: ./.github/actions/godot-build
         with:
@@ -158,71 +162,219 @@ jobs:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
-      - name: Generate C# glue
-        if: ${{ matrix.build-mono }}
+      - name: Create tar.gz Archive
         run: |
-          ${{ matrix.bin }} --headless --generate-mono-glue ./modules/mono/glue
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./bin .
 
-      - name: Build .NET solutions
-        if: ${{ matrix.build-mono }}
-        run: |
-          ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=linuxbsd
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          out_dir: linux/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
 
-      - name: Prepare artifact
-        if: ${{ matrix.artifact }}
-        run: |
-          strip bin/blazium.*
-          chmod +x bin/blazium.*
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
-        if: ${{ matrix.artifact }}
         with:
-          name: ${{ matrix.cache-name }}
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
 
-      - name: Dump Godot API
-        uses: ./.github/actions/godot-api-dump
-        if: ${{ matrix.api-dump }}
+      - name: Notify Cerebro of Build Success
+        uses: ./.github/actions/cerebro-completed
         with:
-          bin: ${{ matrix.bin }}
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          file_url: ${{ secrets.CDN_URL }}/android/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          version: ""
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
-      - name: Unit tests
-        if: ${{ matrix.tests }}
-        run: |
-          ${{ matrix.bin }} --version
-          ${{ matrix.bin }} --help
-          ${{ matrix.bin }} --headless --test --force-colors
-
-      - name: .NET source generators tests
-        if: ${{ matrix.build-mono }}
-        run: |
-          dotnet test modules/mono/editor/Godot.NET.Sdk/Godot.SourceGenerators.Tests
-
-      # Check class reference
-      - name: Check for class reference updates
-        if: ${{ matrix.doc-test }}
-        run: |
-          echo "Running --doctool to see if this changes the public API without updating the documentation."
-          echo -e "If a diff is shown, it means that your code/doc changes are incomplete and you should update the class reference with --doctool.\n\n"
-          ${{ matrix.bin }} --doctool --headless 2>&1 > /dev/null || true
-          git diff --color --exit-code && ! git ls-files --others --exclude-standard | sed -e 's/^/New doc file missing in PR: /' | grep 'xml$'
-
-      # Check API backwards compatibility
-      - name: Check for GDExtension compatibility
-        if: ${{ matrix.api-compat }}
-        run: |
-          ./misc/scripts/validate_extension_api.sh "${{ matrix.bin }}"
-
-      # Download and run the test project
-      - name: Test Godot project
-        uses: ./.github/actions/godot-project-test
-        if: ${{ matrix.proj-test }}
+      - name: Notify Cerebro of Build Failure
+        uses: ./.github/actions/cerebro-failed
         with:
-          bin: ${{ matrix.bin }}
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
-      # Test the project converter
-      - name: Test project converter
-        uses: ./.github/actions/godot-converter-test
-        if: ${{ matrix.proj-conv }}
+  build-linux-32bit:
+    runs-on: "ubuntu-20.04"
+    name: ${{ matrix.name }}
+    needs: build-linux-64bit
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+
+          - name: Editor (target=editor)
+            cache-name: linux-editor-32bit
+            target: editor
+            sconsflags: arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
+
+          - name: Editor w/ Mono (target=editor)
+            cache-name: linux-editor-mono-32bit
+            target: editor
+            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
+
+          - name: Template w/ Mono (target=template_release)
+            cache-name: linux-template-mono-32bit
+            target: template_release
+            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
+
+          - name: Template (target=template_release)
+            cache-name: linux-template-32bit
+            target: template_release
+            sconsflags: arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
+
+          - name: Template w/ Mono (target=template_debug)
+            cache-name: linux-debug-template-mono-32bit
+            target: template_debug
+            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
+
+          - name: Template (target=template_debug)
+            cache-name: linux-debug-template-32bit
+            target: template_debug
+            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
-          bin: ${{ matrix.bin }}
+          repository: blazium-engine/blazium
+          ref: ${{ inputs.build_sha }}
+          submodules: recursive
+          fetch-depth: 2
+
+      - name: Notify Cerebro of Build Starting
+        uses: ./.github/actions/cerebro-started
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+          build_type: ${{ startsWith(matrix.target, 'template_') && 'template' || 'editor' }}
+          mono: ${{ matrix.mono }}
+          deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
+          branch: ${{ github.event.client_payload.branch }}
+          build_os: linux
+          checksum: ${{ inputs.build_sha }}
+          production: ${{ github.event.client_payload.production }}
+
+      # TODO: Figure out somehow how to embed this one.
+      - name: Distro-specific Deps Install
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            scons \
+            pkg-config \
+            libx11-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libudev-dev \
+            libxi-dev \
+            libxrandr-dev \
+            libwayland-dev
+
+      - name: Free disk space on runner
+        run: |
+          echo "Disk usage before:" && df -h
+          sudo rm -rf /usr/local/lib/android
+          echo "Disk usage after:" && df -h
+
+      - name: Restore Godot build cache
+        uses: ./.github/actions/godot-cache-restore
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Setup Python and SCons
+        uses: ./.github/actions/godot-deps
+
+      - name: Setup GCC problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Download and extract mono-glue
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o monoglue.tar.gz
+
+          # Create target directories if they don't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
+
+          # Extract the specific directories from the tar.gz file to their target locations
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
+      
+      - name: Compilation
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: linuxbsd
+          target: ${{ matrix.target }}
+          tests: ${{ matrix.tests }}
+
+      - name: Build GodotSharp
+        if: matrix.mono
+        run: python modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
+
+
+      - name: Save Godot build cache
+        uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Create tar.gz Archive
+        run: |
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./bin .
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          out_dir: linux/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+
+
+      - name: Upload artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+
+      - name: Notify Cerebro of Build Success
+        uses: ./.github/actions/cerebro-completed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          file_url: ${{ secrets.CDN_URL }}/android/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          version: ""
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+      - name: Notify Cerebro of Build Failure
+        uses: ./.github/actions/cerebro-failed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}

@@ -4,65 +4,115 @@ on:
     types: [trigger_build]
 env:
   BASE_NAME: Blazium_v
+  GODOT_BASE_BRANCH: blazium-dev
 
 concurrency:
-  group: ci-${{github.actor}}-nightly-runner
+  group: ci-${{ github.actor }}-${{ github.event.client_payload.type || 'nightly' }}-runner
   cancel-in-progress: true
 
 jobs:
 
+  get-latest-sha:
+    name: 🔍 Get Latest SHA
+    runs-on: ubuntu-latest
+    outputs:
+      build_sha: ${{ steps.get_sha.outputs.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/blazium
+          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          fetch-depth: 1
+      - name: Get Latest Commit SHA
+        id: get_sha
+        run: echo "::set-output name=sha::$(git rev-parse HEAD)"
+
   static-checks:
     name: 📊 Static checks
+    needs: get-latest-sha
     uses: ./.github/workflows/static_checks.yml
     secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
   web-build:
     name: 🌐 Web
-    needs: static-checks
+    needs: [get-latest-sha, static-checks]
     if: ${{ github.event.client_payload.web_build == true }}
     uses: ./.github/workflows/web_builds.yml
     secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
   monoglue-build:
     name: Mono Glue
-    needs: static-checks
+    needs: [get-latest-sha, static-checks]
     if: ${{ github.event.client_payload.monoglue_build == true }}
     uses: ./.github/workflows/mono_glue_build.yml
     secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
-  # android-build:
-  #   name: 🤖 Android
-  #   needs: [static-checks, monoglue-build]
-  #   if: ${{ github.event.client_payload.android_build == true }}
-  #   uses: ./.github/workflows/android_builds.yml
-  #   secrets: inherit
-  #   # with:
-  #   #   mono_glue_run_id: ${{ needs.monoglue-build.outputs.run_id }}
+  android-build:
+    name: 🤖 Android
+    needs: [get-latest-sha, static-checks, monoglue-build]
+    if: ${{ github.event.client_payload.android_build == true }}
+    uses: ./.github/workflows/android_builds.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
-  # ios-build:
-  #   name: 🍏 iOS
-  #   needs: [static-checks, monoglue-build, macos-build]
-  #   if: ${{ github.event.client_payload.ios_build == true }}
-  #   uses: ./.github/workflows/ios_builds.yml
-  #   secrets: inherit
+  ios-build:
+    name: 🍏 iOS
+    needs: [get-latest-sha, static-checks, monoglue-build]
+    if: ${{ github.event.client_payload.ios_build == true }}
+    uses: ./.github/workflows/ios_builds.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
-  # linux-build:
-  #   name: 🐧 Linux
-  #   needs: [static-checks, monoglue-build, ios-build, macos-build]
-  #   if: ${{ github.event.client_payload.linux_build == true }}
-  #   uses: ./.github/workflows/linux_builds.yml
-  #   secrets: inherit
+  linux-build:
+    name: 🐧 Linux
+    needs: [get-latest-sha, static-checks, monoglue-build]
+    if: ${{ github.event.client_payload.linux_build == true }}
+    uses: ./.github/workflows/linux_builds.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
-  # macos-build:
-  #   name: 🍎 macOS
-  #   needs: [static-checks, monoglue-build]
-  #   if: ${{ github.event.client_payload.macos_build == true }}
-  #   uses: ./.github/workflows/macos_builds.yml
-  #   secrets: inherit
+  macos-build:
+    name: 🍎 macOS
+    needs: [get-latest-sha, static-checks, monoglue-build]
+    if: ${{ github.event.client_payload.macos_build == true }}
+    uses: ./.github/workflows/macos_builds.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
 
-  # windows-build:
-  #   name: 🏁 Windows
-  #   needs: [static-checks, monoglue-build, ios-build, macos-build]
-  #   if: ${{ github.event.client_payload.windows_build == true }}
+  windows-build:
+    name: 🏁 Windows
+    needs: [get-latest-sha, static-checks, monoglue-build]
+    if: ${{ github.event.client_payload.windows_build == true }}
+    uses: ./.github/workflows/windows_builds.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
+
+  # wrap-up:
+  #   name: Wrapup
+  #   needs: [get-latest-sha, static-checks, monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+  #   if: ${{ always() }}
   #   uses: ./.github/workflows/windows_builds.yml
   #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}

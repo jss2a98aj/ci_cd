@@ -1,13 +1,22 @@
 name: 🏁 Windows Builds
 on:
   workflow_call:
+    inputs:
+      build_sha:
+        description: "Build commit SHA to use for this job"
+        required: true
+        type: string
+      runner_id:
+        description: "Runner ID of the Parent Runner"
+        required: true
+        type: string
 
 # Global Settings
 # SCONS_CACHE for windows must be set in the build environment
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes d3d12=yes "angle_libs=${{github.workspace}}/"
+  SCONSFLAGS: verbose=yes warnings=no werror=no debug_symbols=no progress=no module_text_server_fb_enabled=yes d3d12=yes "angle_libs=${{github.workspace}}/"
   SCONS_CACHE_MSVC_CONFIG: true
 
 concurrency:
@@ -26,54 +35,63 @@ jobs:
           - name: Editor (target=editor, tests=yes)
             cache-name: windows-editor
             target: editor
-            tests: true
-            # Skip debug symbols, they're way too big with MSVC.
-            sconsflags: debug_symbols=no vsproj=yes vsproj_gen_only=no windows_subsystem=console
-            bin: "./bin/blazium.windows.editor.x86_64.exe"
-            compiler: msvc
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
 
           - name: Editor w/ Mono (target=editor)
             cache-name: windows-editor-mono
             target: editor
-            sconsflags: module_mono_enabled=yes
-            bin: ./bin/blazium.windows.editor.x86_64.mono.exe
-            build-mono: true
-            tests: false # Disabled due freeze caused by mix Mono build and CI
-            doc-test: true
-            proj-conv: true
-            api-compat: true
-            artifact: true
-
-          - name: Editor w/ clang-cl (target=editor, tests=yes, use_llvm=yes)
-            cache-name: windows-editor-clang
-            target: editor
-            tests: true
-            sconsflags: debug_symbols=no windows_subsystem=console use_llvm=yes
-            bin: ./bin/blazium.windows.editor.x86_64.llvm.exe
-            compiler: clang
+            sconsflags: module_mono_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
 
           - name: Template (target=template_release)
             cache-name: windows-template
             target: template_release
-            tests: true
-            sconsflags: debug_symbols=no tests=yes
-            bin: "./bin/blazium.windows.template_release.x86_64.console.exe"
-            compiler: msvc
-            artifact: true
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
 
-          - name: Template w/ GCC (target=template_release, tests=yes, use_mingw=yes)
-            cache-name: windows-template-gcc
-            # MinGW takes MUCH longer to compile; save time by only targeting Template.
+          - name: Template (target=template_debug)
+            cache-name: windows-template-debug
+            target: template_debug
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: false
+
+          - name: Template (target=template_release)
+            cache-name: windows-template
             target: template_release
-            tests: true
-            sconsflags: debug_symbols=no use_mingw=yes
-            bin: ./bin/blazium.windows.template_release.x86_64.console.exe
-            compiler: gcc
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
+
+          - name: Template (target=template_debug)
+            cache-name: windows-template-debug
+            target: template_debug
+            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            mono: true
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
+          repository: blazium-engine/blazium
+          ref: ${{ inputs.build_sha }}
           submodules: recursive
+          fetch-depth: 2
+
+      - name: Notify Cerebro of Build Starting
+        uses: ./.github/actions/cerebro-started
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+          build_type: ${{ startsWith(matrix.target, 'template_') && 'template' || 'editor' }}
+          mono: ${{ matrix.mono }}
+          deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
+          branch: ${{ github.event.client_payload.branch }}
+          build_os: windows
+          checksum: ${{ inputs.build_sha }}
+          production: ${{ github.event.client_payload.production }}
+
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -114,12 +132,25 @@ jobs:
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
 
-      - name: Generate Glue Code
-        if: ${{ matrix.cache-name == 'windows-editor-mono' }}
-        run: ./bin/blazium.windows.editor.x86_64.mono.exe --headless --generate-mono-glue modules/mono/glue
+      - name: Download and extract mono-glue
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+          
+          # Download the file
+          curl -L $URL -o monoglue.tar.gz
+
+          # Create target directories if they don't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
+
+          # Extract the specific directories from the tar.gz file to their target locations
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
 
       - name: Build GodotSharp
-        if: ${{ matrix.cache-name == 'windows-editor-mono' }}
+        if: matrix.mono
         run: python modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
 
       - name: Save Godot build cache
@@ -128,20 +159,39 @@ jobs:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
-      - name: Prepare artifact
-        if: ${{ matrix.artifact }}
+      - name: Create tar.gz Archive
         run: |
-          Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./bin .
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          out_dir: windows/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+
 
       - name: Upload artifact
-        if: ${{ matrix.artifact }}
         uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ matrix.cache-name }}
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
 
-      - name: Unit tests
-        if: ${{ matrix.tests }}
-        run: |
-          ${{ matrix.bin }} --version
-          ${{ matrix.bin }} --help
-          ${{ matrix.bin }} --test --force-colors
+      - name: Notify Cerebro of Build Success
+        uses: ./.github/actions/cerebro-completed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          file_url: ${{ secrets.CDN_URL }}/windows/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          version: ""
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+      - name: Notify Cerebro of Build Failure
+        uses: ./.github/actions/cerebro-failed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}

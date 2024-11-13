@@ -1,12 +1,21 @@
 name: 🍎 macOS Builds
 on:
   workflow_call:
+    inputs:
+      build_sha:
+        description: "Build commit SHA to use for this job"
+        required: true
+        type: string
+      runner_id:
+        description: "Runner ID of the Parent Runner"
+        required: true
+        type: string
 
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
-  SCONSFLAGS: verbose=yes warnings=no progress=no
+  SCONSFLAGS: verbose=yes warnings=no werror=no debug_symbols=no progress=no
 
 concurrency:
   group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-macos
@@ -17,6 +26,7 @@ jobs:
     runs-on: "macos-latest"
     name: ${{ matrix.name }}
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         include:
@@ -37,9 +47,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: blazium-engine/blazium
-          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          ref: ${{ inputs.build_sha }}
           submodules: recursive
           fetch-depth: 2
+
+      - name: Notify Cerebro of Build Starting
+        uses: ./.github/actions/cerebro-started
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+          build_type: editor
+          mono: ${{ matrix.mono }}
+          deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
+          branch: ${{ github.event.client_payload.branch }}
+          build_os: macos
+          checksum: ${{ inputs.build_sha }}
+          production: ${{ github.event.client_payload.production }}
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -54,16 +79,18 @@ jobs:
         if: matrix.mono
         run: |
           TYPE=${{ github.event.client_payload.type || 'nightly' }}
-          URL="https://cdn.blazium.app/${TYPE}/mono-glue/mono-glue-${TYPE}.tar.gz"
+          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
           
           # Download the file
-          curl -L $URL -o mono-glue.tar.gz
+          curl -L $URL -o monoglue.tar.gz
 
-          # Create target directory if it doesn't exist
-          mkdir -p modules/mono/glue/GodotSharp/GodotSharp/
+          # Create target directories if they don't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
 
-          # Extract the tar.gz file to the target directory
-          tar -xzvf mono-glue.tar.gz -C modules/mono/glue/GodotSharp/GodotSharp/
+          # Extract the specific directories from the tar.gz file to their target locations
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
 
       - name: Setup Vulkan SDK
         run: |
@@ -112,13 +139,13 @@ jobs:
 
       - name: Package Editor
         run: |
-          cp -r misc/dist/macos_tools.app ./Godot${{ matrix.mono && "_mono" || "" }}.app
-          mkdir -p Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
-          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
-          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Godot_mono.app/Contents/Resources/GodotSharp" || "" }}
-          chmod +x Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
-          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Godot{{ matrix.mono && "_mono" || "" }}.app
-          zip -q -9 -r "Blazium_macos.universal.zip" Godot{{ matrix.mono && "_mono" || "" }}.app
+          cp -r misc/dist/macos_tools.app ./Blazium${{ matrix.mono && "_mono" || "" }}.app
+          mkdir -p Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
+          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Blazium
+          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Blazium{{ matrix.mono && "_mono" || "" }}.app/Contents/Resources/GodotSharp" || "" }}
+          chmod +x Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Blazium
+          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Blazium{{ matrix.mono && "_mono" || "" }}.app
+          zip -q -9 -r "Blazium_macos.universal.zip" Blazium{{ matrix.mono && "_mono" || "" }}.app
 
       - name: Upload Editor artifact
         uses: ./.github/actions/upload-artifact
@@ -131,22 +158,58 @@ jobs:
         with:
           name: ${{ matrix.cache-name }}
           path: Blazium_macos.universal.zip
+      
+      - name: Create tar.gz Archive
+        run: |
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./Blazium_macos.universal.zip .
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          out_dir: macos/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+
+
+
+      - name: Notify Cerebro of Build Success
+        uses: ./.github/actions/cerebro-completed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          file_url: ${{ secrets.CDN_URL }}/macos/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          version: ""
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+      - name: Notify Cerebro of Build Failure
+        uses: ./.github/actions/cerebro-failed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
   build-templates:
     runs-on: "macos-latest"
     name: ${{ matrix.name }}
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         include:
           - name: Template
             cache-name: macos-template
             target: template_release
+            mono: false
             sconsflags: debug_symbols=no ${{ github.event.client_payload.production && 'production=yes' || '' }}
 
           - name: Template/w MONO
             cache-name: macos-template-mono
             target: template_release
+            mono: true
             sconsflags: debug_symbols=no ${{ github.event.client_payload.production && 'production=yes' || '' }}
 
     steps:
@@ -154,9 +217,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: blazium-engine/blazium
-          ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
+          ref: ${{ inputs.build_sha }}
           submodules: recursive
           fetch-depth: 2
+
+      - name: Notify Cerebro of Build Starting
+        uses: ./.github/actions/cerebro-started
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+          build_type: template
+          mono: ${{ matrix.mono }}
+          deploy_type: ${{ github.event.client_payload.type || 'nightly' }}
+          branch: ${{ github.event.client_payload.branch }}
+          build_os: macos
+          checksum: ${{ inputs.build_sha }}
+          production: ${{ github.event.client_payload.production }}
+
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -171,16 +250,18 @@ jobs:
         if: matrix.mono
         run: |
           TYPE=${{ github.event.client_payload.type || 'nightly' }}
-          URL="https://cdn.blazium.app/${TYPE}/mono-glue/mono-glue-${TYPE}.tar.gz"
+          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
           
           # Download the file
-          curl -L $URL -o mono-glue.tar.gz
+          curl -L $URL -o monoglue.tar.gz
 
-          # Create target directory if it doesn't exist
-          mkdir -p modules/mono/glue/GodotSharp/GodotSharp/
+          # Create target directories if they don't exist
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharp
+          mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
 
-          # Extract the tar.gz file to the target directory
-          tar -xzvf mono-glue.tar.gz -C modules/mono/glue/GodotSharp/GodotSharp/
+          # Extract the specific directories from the tar.gz file to their target locations
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
+          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
 
       - name: Setup Vulkan SDK
         run: |
@@ -254,10 +335,43 @@ jobs:
           cp bin/blazium.macos.template_debug.universal{{ matrix.mono && ".mono" || "" }} macos_template.app/Contents/MacOS/blazium_macos_debug.universal{{ matrix.mono && ".mono" || "" }}
           chmod +x macos_template.app/Contents/MacOS/blazium_macos*
           ---
-          cp -r misc/dist/macos_tools.app ./Godot${{ matrix.mono && "_mono" || "" }}.app
-          mkdir -p Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
-          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
-          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Godot_mono.app/Contents/Resources/GodotSharp" || "" }}
-          chmod +x Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Godot
-          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Godot{{ matrix.mono && "_mono" || "" }}.app
-          zip -q -9 -r "Blazium_macos.universal.zip" Godot{{ matrix.mono && "_mono" || "" }}.app
+          cp -r misc/dist/macos_tools.app ./Blazium${{ matrix.mono && "_mono" || "" }}.app
+          mkdir -p Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
+          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Blazium
+          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Blazium{{ matrix.mono && "_mono" || "" }}.app/Contents/Resources/GodotSharp" || "" }}
+          chmod +x Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Blazium
+          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Blazium{{ matrix.mono && "_mono" || "" }}.app
+          zip -q -9 -r "Blazium_macos.universal.zip" Blazium{{ matrix.mono && "_mono" || "" }}.app
+      
+      - name: Create tar.gz Archive
+        run: |
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./Blazium_macos.universal.zip .
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          out_dir: macos/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+
+
+
+      - name: Notify Cerebro of Build Success
+        uses: ./.github/actions/cerebro-completed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          file_url: ${{ secrets.CDN_URL }}/macos/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
+          version: ""
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+      - name: Notify Cerebro of Build Failure
+        uses: ./.github/actions/cerebro-failed
+        with:
+          name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
+          run_id: ${{ inputs.runner_id }}
+          cerebro_url: ${{ secrets.CEREBRO_URL }}
+          cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}

@@ -1,0 +1,29 @@
+name: Blazium Cerebro Deploy
+description: Update the State
+
+inputs:
+  name:
+    description: Deploy what?
+    required: true
+  type:
+    description: Type of Deployment (nightly, etc)
+    required: true
+  cerebro_url:
+    description: The full URL to send the update.
+    required: true
+  cerebro_auth:
+    description: Auth Key to Cerebro for Blazium.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Send Cerebro Deploy Command
+      shell: bash
+      run: |
+        curl -X POST "${{ inputs.cerebro_url }}/deploy/${{ inputs.name }}" \
+          -H "Content-Type: application/json" \
+          -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" \
+          -d '{
+                "type": "${{ inputs.type }}"
+              }'

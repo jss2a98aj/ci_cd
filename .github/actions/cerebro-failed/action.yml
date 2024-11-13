@@ -1,0 +1,26 @@
+name: Blazium Cerebro Build (Failed)
+description: Update the State
+
+inputs:
+  name:
+    description: The artifact name.
+    required: true
+  run_id:
+    description: ID for the Whole Run.
+    required: true
+  cerebro_url:
+    description: The full URL to send the update.
+    required: true
+  cerebro_auth:
+    description: Auth Key to Cerebro for Blazium.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Send Cerebro Update
+      shell: bash
+      run: |
+        curl -X POST "${{ inputs.cerebro_url }}/enginebuilds/${{ inputs.run_id }}/failed/${{ inputs.name }}" \
+          -H "Content-Type: application/json" \
+          -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" 

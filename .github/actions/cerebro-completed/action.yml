@@ -1,0 +1,36 @@
+name: Blazium Cerebro Build (Completed)
+description: Update the State
+
+inputs:
+  name:
+    description: The artifact name.
+    required: true
+  run_id:
+    description: ID for the Whole Run.
+    required: true
+  file_url:
+    description: CDN File URL
+    required: true
+  version:
+    description: Version of Project for File
+    required: true
+  cerebro_url:
+    description: The full URL to send the update.
+    required: true
+  cerebro_auth:
+    description: Auth Key to Cerebro for Blazium.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Send Cerebro Update
+      shell: bash
+      run: |
+        curl -X POST "${{ inputs.cerebro_url }}/enginebuilds/${{ inputs.run_id }}/completed/${{ inputs.name }}" \
+          -H "Content-Type: application/json" \
+          -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" \
+          -d '{
+                "file_url": "${{ inputs.file_url }}",
+                "version": "${{ inputs.version }}"
+              }'
