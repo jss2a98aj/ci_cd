@@ -138,7 +138,6 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: web
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
