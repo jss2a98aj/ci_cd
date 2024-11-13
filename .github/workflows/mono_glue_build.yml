@@ -20,6 +20,7 @@ env:
   TSAN_OPTIONS: suppressions=misc/error_suppressions/tsan.txt
   TERM: 'xterm'
   DISPLAY: ':0'
+  DEPLOY_TYPE: web-editor
 
 concurrency:
   group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-monoglue
