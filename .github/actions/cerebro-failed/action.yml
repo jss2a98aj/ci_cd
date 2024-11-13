@@ -21,6 +21,6 @@ runs:
     - name: Send Cerebro Update
       shell: bash
       run: |
-        curl -X POST "${{ inputs.cerebro_url }}/enginebuilds/${{ inputs.run_id }}/failed/${{ inputs.name }}" \
+        curl -X POST "${{ inputs.cerebro_url }}/api/v1/enginebuilds/${{ inputs.run_id }}/failed/${{ inputs.name }}" \
           -H "Content-Type: application/json" \
           -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" 

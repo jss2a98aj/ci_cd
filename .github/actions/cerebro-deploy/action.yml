@@ -21,7 +21,7 @@ runs:
     - name: Send Cerebro Deploy Command
       shell: bash
       run: |
-        curl -X POST "${{ inputs.cerebro_url }}/deploy/${{ inputs.name }}" \
+        curl -X POST "${{ inputs.cerebro_url }}/api/v1/deploy/${{ inputs.name }}" \
           -H "Content-Type: application/json" \
           -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" \
           -d '{
