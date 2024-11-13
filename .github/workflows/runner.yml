@@ -59,7 +59,7 @@ jobs:
 
   android-build:
     name: 🤖 Android
-    needs: [get-latest-sha, static-checks, monoglue-build]
+    needs: [monoglue-build]
     if: ${{ github.event.client_payload.android_build == true }}
     uses: ./.github/workflows/android_builds.yml
     secrets: inherit
@@ -69,7 +69,7 @@ jobs:
 
   ios-build:
     name: 🍏 iOS
-    needs: [get-latest-sha, static-checks, monoglue-build]
+    needs: [monoglue-build]
     if: ${{ github.event.client_payload.ios_build == true }}
     uses: ./.github/workflows/ios_builds.yml
     secrets: inherit
@@ -79,7 +79,7 @@ jobs:
 
   linux-build:
     name: 🐧 Linux
-    needs: [get-latest-sha, static-checks, monoglue-build]
+    needs: [monoglue-build]
     if: ${{ github.event.client_payload.linux_build == true }}
     uses: ./.github/workflows/linux_builds.yml
     secrets: inherit
@@ -89,7 +89,7 @@ jobs:
 
   macos-build:
     name: 🍎 macOS
-    needs: [get-latest-sha, static-checks, monoglue-build]
+    needs: [monoglue-build]
     if: ${{ github.event.client_payload.macos_build == true }}
     uses: ./.github/workflows/macos_builds.yml
     secrets: inherit
@@ -99,7 +99,7 @@ jobs:
 
   windows-build:
     name: 🏁 Windows
-    needs: [get-latest-sha, static-checks, monoglue-build]
+    needs: [monoglue-build]
     if: ${{ github.event.client_payload.windows_build == true }}
     uses: ./.github/workflows/windows_builds.yml
     secrets: inherit
