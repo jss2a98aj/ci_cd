@@ -131,21 +131,55 @@ jobs:
 
       - name: Prepare Editor
         run: |
-          lipo -create ./bin/blazium.macos.${{ matrix.target }}.x86_64${{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.${{ matrix.target }}.arm64${{ matrix.mono && ".mono" || "" }} -output ./bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }}
-          ${{ matrix.mono && "./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=macos" || "" }}
-          rm ./bin/blazium.macos.${{ matrix.target }}.x86_64${{ matrix.mono && ".mono" || "" }} ./bin/blazium.macos.${{ matrix.target }}.arm64${{ matrix.mono && ".mono" || "" }}
+          MONO_SUFFIX=""
+          if [ "${{ matrix.mono }}" == "true" ]; then
+            MONO_SUFFIX=".mono"
+          fi
+
+          # Create universal binary
+          lipo -create ./bin/blazium.macos.${{ matrix.target }}.x86_64${MONO_SUFFIX} ./bin/blazium.macos.${{ matrix.target }}.arm64${MONO_SUFFIX} -output ./bin/blazium.macos.${{ matrix.target }}.universal${MONO_SUFFIX}
+
+          # Run Mono-specific build script if matrix.mono is true
+          if [ "${{ matrix.mono }}" == "true" ]; then
+            ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=macos
+          fi
+
+          # Remove original binaries and strip the universal binary
+          rm ./bin/blazium.macos.${{ matrix.target }}.x86_64${MONO_SUFFIX} ./bin/blazium.macos.${{ matrix.target }}.arm64${MONO_SUFFIX}
           strip bin/blazium.*
           chmod +x bin/blazium.*
 
       - name: Package Editor
         run: |
-          cp -r misc/dist/macos_tools.app ./Blazium${{ matrix.mono && "_mono" || "" }}.app
-          mkdir -p Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS
-          cp bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }} Godot${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Blazium
-          ${{ matrix.mono && "cp -rp ./bin/GodotSharp Blazium{{ matrix.mono && "_mono" || "" }}.app/Contents/Resources/GodotSharp" || "" }}
-          chmod +x Blazium${{ matrix.mono && "_mono" || "" }}.app/Contents/MacOS/Blazium
-          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor${{ github.event.client_payload.production && '' || '_debug' }}.entitlements -s - Blazium{{ matrix.mono && "_mono" || "" }}.app
-          zip -q -9 -r "Blazium_macos.universal.zip" Blazium{{ matrix.mono && "_mono" || "" }}.app
+          MONO_SUFFIX=""
+          ENTITLEMENTS_FILE="misc/dist/macos/editor_debug.entitlements"
+          
+          # Set suffix for Mono if enabled
+          if [ "${{ matrix.mono }}" == "true" ]; then
+            MONO_SUFFIX="_mono"
+          fi
+
+          # Determine the entitlements file based on production flag
+          if [ "${{ github.event.client_payload.production }}" == "true" ]; then
+            ENTITLEMENTS_FILE="misc/dist/macos/editor.entitlements"
+          fi
+
+          # Copy macOS application template and binary
+          cp -r misc/dist/macos_tools.app ./Blazium${MONO_SUFFIX}.app
+          mkdir -p Blazium${MONO_SUFFIX}.app/Contents/MacOS
+          cp bin/blazium.macos.${{ matrix.target }}.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS/Blazium
+
+          # Copy GodotSharp resources if Mono is enabled
+          if [ "${{ matrix.mono }}" == "true" ]; then
+            cp -rp ./bin/GodotSharp Blazium${MONO_SUFFIX}.app/Contents/Resources/GodotSharp
+          fi
+
+          # Set permissions and sign the application
+          chmod +x Blazium${MONO_SUFFIX}.app/Contents/MacOS/Blazium
+          codesign --force --timestamp --options=runtime --entitlements $ENTITLEMENTS_FILE -s - Blazium${MONO_SUFFIX}.app
+
+          # Package the application into a zip file
+          zip -q -9 -r "Blazium_macos.universal.zip" Blazium${MONO_SUFFIX}.app
 
       - name: Upload Editor artifact
         uses: ./.github/actions/upload-artifact
