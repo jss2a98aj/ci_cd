@@ -65,7 +65,7 @@ jobs:
   play-deploy:
     name: 🌐 Google Play Deploy
     needs: [template-deploy]
-    uses: ./.github/workflows/steam_deploy.yml
+    uses: ./.github/workflows/play_deploy.yml
     secrets: inherit
     with:
       build_sha: ${{ inputs.build_sha }}
@@ -74,7 +74,7 @@ jobs:
   apple-deploy:
     name: 🌐 Apple Store Deploy
     needs: [template-deploy]
-    uses: ./.github/workflows/steam_deploy.yml
+    uses: ./.github/workflows/apple_deploy.yml
     secrets: inherit
     with:
       build_sha: ${{ inputs.build_sha }}
