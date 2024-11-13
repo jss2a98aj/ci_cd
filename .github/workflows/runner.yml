@@ -107,12 +107,22 @@ jobs:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
 
-  # wrap-up:
-  #   name: Wrapup
-  #   needs: [get-latest-sha, static-checks, monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
-  #   if: ${{ always() }}
-  #   uses: ./.github/workflows/windows_builds.yml
-  #   secrets: inherit
-  #   with:
-  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-  #     runner_id: ${{ github.run_id }}
+  deploy:
+    name: Deploy
+    needs: [get-latest-sha, static-checks, monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+    if: success()
+    uses: ./.github/workflows/deploy_all.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}
+
+  cleanup:
+    name: Clean Up
+    needs: [get-latest-sha, static-checks, monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+    if: failure() || cancelled()
+    uses: ./.github/workflows/clean_up.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+      runner_id: ${{ github.run_id }}

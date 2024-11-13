@@ -1,0 +1,56 @@
+name: 🔗 Deploy All
+on:
+  workflow_call:
+    inputs:
+      build_sha:
+        description: "Build commit SHA to use for this job"
+        required: true
+        type: string
+      runner_id:
+        description: "Runner ID of the Parent Runner"
+        required: true
+        type: string
+env:
+  BASE_NAME: Blazium_v
+  GODOT_BASE_BRANCH: blazium-dev
+
+concurrency:
+  group: ci-${{ github.actor }}-${{ github.event.client_payload.type || 'nightly' }}-deploy-all
+  cancel-in-progress: true
+
+jobs:
+
+  template-deploy:
+    name: 📊 Template Deploy
+    uses: ./.github/workflows/template_deploy.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ inputs.build_sha }}
+      runner_id: ${{ inputs.runner_id }}
+
+  steam-deploy:
+    name: 🌐 Steam Deploy
+    needs: [template-deploy]
+    uses: ./.github/workflows/steam_deploy.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ inputs.build_sha }}
+      runner_id: ${{ inputs.runner_id }}
+
+  play-deploy:
+    name: 🌐 Google Play Deploy
+    needs: [template-deploy]
+    uses: ./.github/workflows/steam_deploy.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ inputs.build_sha }}
+      runner_id: ${{ inputs.runner_id }}
+
+  apple-deploy:
+    name: 🌐 Apple Store Deploy
+    needs: [template-deploy]
+    uses: ./.github/workflows/steam_deploy.yml
+    secrets: inherit
+    with:
+      build_sha: ${{ inputs.build_sha }}
+      runner_id: ${{ inputs.runner_id }}
