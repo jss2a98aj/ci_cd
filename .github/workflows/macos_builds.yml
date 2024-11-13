@@ -182,10 +182,20 @@ jobs:
           zip -q -9 -r "Blazium_macos.universal.zip" Blazium${MONO_SUFFIX}.app
 
       - name: Upload Editor artifact
+        run: |
+          MONO_SUFFIX=""
+          if [ "${{ matrix.mono }}" == "true" ]; then
+            MONO_SUFFIX=".mono"
+          fi
+
+          echo "ARTIFACT_PATH=./bin/blazium.macos.${{ matrix.target }}.universal${MONO_SUFFIX}" >> $GITHUB_ENV
+
+      - name: Upload Editor artifact
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}
-          path: ./bin/blazium.macos.${{ matrix.target }}.universal${{ matrix.mono && ".mono" || "" }}
+          path: ${{ env.ARTIFACT_PATH }}
+
           
       - name: Upload Packaged Editor artifact
         uses: ./.github/actions/upload-artifact
@@ -416,8 +426,6 @@ jobs:
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
           out_dir: macos/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
-
-
 
       - name: Notify Cerebro of Build Success
         uses: ./.github/actions/cerebro-completed
