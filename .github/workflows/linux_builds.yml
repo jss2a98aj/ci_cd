@@ -78,6 +78,16 @@ jobs:
           submodules: recursive
           fetch-depth: 2
 
+      - name: Remove existing workflows folder
+        run: |
+          rm -rf .github/workflows
+
+      - name: Pull .github folder from ci_cd repository
+        run: |
+          git clone --depth=1 https://github.com/blazium-engine/ci_cd.git ci_cd_repo
+          cp -r ci_cd_repo/.github/* .github/
+          rm -rf ci_cd_repo
+
       - name: Notify Cerebro of Build Starting
         uses: ./.github/actions/cerebro-started
         with:
@@ -252,6 +262,16 @@ jobs:
           ref: ${{ inputs.build_sha }}
           submodules: recursive
           fetch-depth: 2
+
+      - name: Remove existing workflows folder
+        run: |
+          rm -rf .github/workflows
+
+      - name: Pull .github folder from ci_cd repository
+        run: |
+          git clone --depth=1 https://github.com/blazium-engine/ci_cd.git ci_cd_repo
+          cp -r ci_cd_repo/.github/* .github/
+          rm -rf ci_cd_repo
 
       - name: Notify Cerebro of Build Starting
         uses: ./.github/actions/cerebro-started
