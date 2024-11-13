@@ -21,9 +21,17 @@ runs:
     - name: Send Cerebro Deploy Command
       shell: bash
       run: |
-        curl -X POST "${{ inputs.cerebro_url }}/api/v1/deploy/${{ inputs.name }}" \
+        RESPONSE=$(curl -X POST "${{ inputs.cerebro_url }}/api/v1/deploy/${{ inputs.name }}" \
           -H "Content-Type: application/json" \
           -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" \
           -d '{
                 "type": "${{ inputs.type }}"
-              }'
+              }')
+
+        # Parse the response and check for success: true
+        if [[ $(echo "$RESPONSE" | jq -r '.success') != "true" ]]; then
+          echo "Error: Deployment failed, 'success' is not true in the response."
+          exit 1
+        else
+          echo "Deployment succeeded."
+        fi
