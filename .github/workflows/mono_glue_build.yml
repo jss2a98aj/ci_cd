@@ -132,16 +132,8 @@ jobs:
           source: monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
           out_dir: monoglue/${{ github.event.client_payload.type || 'nightly' }}
 
-  success-handler:
-    name: Success Handler
-    needs: build-monoglue
-    if: ${{ success() }}
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Success Message
-        run: echo "Build succeeded! Proceeding with post-build tasks."
-
       - name: Notify Cerebro of Build Success
+        if: success() # Only runs if the job was successful
         uses: ./.github/actions/cerebro-completed
         with:
           name: monoglue-${{ github.event.client_payload.type || 'nightly' }}
@@ -151,16 +143,8 @@ jobs:
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
-  failure-handler:
-    name: Failure Handler
-    needs: build-monoglue
-    if: ${{ failure() }}
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Failure Message
-        run: echo "Build failed. Handling failure-specific tasks."
-
       - name: Notify Cerebro of Build Failure
+        if: failure() || cancelled() # Triggers if the job fails or is canceled
         uses: ./.github/actions/cerebro-failed
         with:
           name: monoglue-${{ github.event.client_payload.type || 'nightly' }}
