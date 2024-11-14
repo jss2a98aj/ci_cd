@@ -121,7 +121,9 @@ jobs:
 
           cp -r ./mono-glue/GodotSharp/GodotSharp/Generated/* combined/GodotSharp/
           cp -r ./mono-glue/GodotSharp/GodotSharpEditor/Generated/* combined/GodotSharpEditor
-          tar -czvf monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C combined .
+          cd combined
+          tar -czvf ../monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz .
+          cd ..
 
       - uses: BetaHuhn/do-spaces-action@v2
         with:
