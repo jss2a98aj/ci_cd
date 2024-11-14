@@ -82,7 +82,7 @@ jobs:
         uses: ammaraskar/gcc-problem-matcher@master
 
       - name: Notify Cerebro of Build Starting
-        uses: ./.github/actions/cerebro-completed
+        uses: ./.github/actions/cerebro-started
         with:
           name: monoglue-${{ github.event.client_payload.type || 'nightly' }}
           run_id: ${{ inputs.runner_id }}
