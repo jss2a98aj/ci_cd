@@ -28,10 +28,11 @@ runs:
                 "type": "${{ inputs.type }}"
               }')
 
+        echo "## Deploy (Triggered)" >> $GITHUB_STEP_SUMMARY
         # Parse the response and check for success: true
         if [[ $(echo "$RESPONSE" | jq -r '.success') != "true" ]]; then
-          echo "Error: Deployment failed, 'success' is not true in the response."
+          echo "Error: Deployment failed, 'success' is not true in the response." >> $GITHUB_STEP_SUMMARY
           exit 1
         else
-          echo "Deployment succeeded."
+          echo "Deployment succeeded." >> $GITHUB_STEP_SUMMARY
         fi

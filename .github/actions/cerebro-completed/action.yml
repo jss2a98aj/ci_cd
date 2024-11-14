@@ -27,10 +27,21 @@ runs:
     - name: Send Cerebro Update
       shell: bash
       run: |
-        curl -X POST "${{ inputs.cerebro_url }}/api/v1/enginebuilds/${{ inputs.run_id }}/completed/${{ inputs.name }}" \
+        response=$(curl -s -X POST "${{ inputs.cerebro_url }}/api/v1/enginebuilds/${{ inputs.run_id }}/completed/${{ inputs.name }}" \
           -H "Content-Type: application/json" \
           -H "BLAZIUM_AUTH: ${{ inputs.cerebro_auth }}" \
           -d '{
                 "file_url": "${{ inputs.file_url }}",
                 "version": "${{ inputs.version }}"
-              }'
+              }')
+
+
+        echo "## Build (Completed)" >> $GITHUB_STEP_SUMMARY
+        # Check if the response contains "success: false"
+        if echo "$response" | grep -q '"success":false'; then
+          echo "Error: Cerebro update failed." >> $GITHUB_STEP_SUMMARY
+          echo "Response: $response" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        else
+          echo "Cerebro update was successful." >> $GITHUB_STEP_SUMMARY
+        fi
