@@ -106,7 +106,7 @@ jobs:
           if: matrix.mono
           run: |
             TYPE=${{ github.event.client_payload.type || 'nightly' }}
-            URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+            URL="https://cdn.blazium.app/monoglue/${TYPE}/monoglue-${TYPE}.tar.gz"
             
             # Download the file
             curl -L $URL -o monoglue.tar.gz
