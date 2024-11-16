@@ -17,7 +17,7 @@ env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: blazium-dev
   SCONSFLAGS: verbose=yes warnings=no werror=no debug_symbols=no progress=no generate_apk=yes module_text_server_fb_enabled=yes
-  BUILD_FLAG: ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+  BUILD_FLAG: ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }}
   TEMPLATE_TYPE: ${{ github.event.client_payload.production && 'template_release' || 'template_debug' }}
   BUILD_TYPE: ${{ github.event.client_payload.type || 'nightly' }}
   DOTNET_NOLOGO: true
@@ -40,29 +40,33 @@ jobs:
         fail-fast: false
         matrix:
           include:
-            - name: Editor (target=editor, arch=arm64, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
+            - name: Editor (target=editor, arch=arm64, ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }})
               cache-name: android-editor-arm64
               target: editor
               tests: false
-              sconsflags: arch=arm64 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+              sconsflags: arch=arm64 ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }}
+              mono: false
 
-            - name: Editor (target=editor, arch=arm32, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
+            - name: Editor (target=editor, arch=arm32, ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }})
               cache-name: android-editor-arm32
               target: editor
               tests: false
-              sconsflags: arch=arm32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+              sconsflags: arch=arm32 ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }}
+              mono: false
 
-            - name: Editor (target=editor, arch=x86_64, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
+            - name: Editor (target=editor, arch=x86_64, ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }})
               cache-name: android-editor-x86_64
               target: editor
               tests: false
-              sconsflags: arch=x86_64 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+              sconsflags: arch=x86_64 ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }}
+              mono: false
 
-            - name: Editor (target=editor, arch=x86_32, ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }})
+            - name: Editor (target=editor, arch=x86_32, ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }})
               cache-name: android-editor-x86_32
               target: editor
               tests: false
-              sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+              sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || 'use_static_cpp=yes' }}
+              mono: false
 
       steps:
         - name: Checkout Repository
@@ -271,48 +275,56 @@ jobs:
               target: template_release
               tests: false
               sconsflags: arch=arm64 
+              mono: false
 
             - name: Template (target=template_debug, arch=arm32)
               cache-name: android-debug-template-arm32
               target: template_debug
               tests: false
               sconsflags: arch=arm32 
+              mono: false
 
             - name: Template (target=template_debug, arch=arm64)
               cache-name: android-debug-template-arm64
               target: template_debug
               tests: false
               sconsflags: arch=arm64 
+              mono: false
 
             - name: Template (target=template_release, arch=arm32)
               cache-name: android-release-template-arm32
               target: template_release
               tests: false
               sconsflags: arch=arm32 
+              mono: false
 
             - name: Template (target=template_release, arch=x86_64)
               cache-name: android-template-x86_64
               target: template_release
               tests: false
               sconsflags: arch=x86_64 
+              mono: false
 
             - name: Template (target=template_debug, arch=x86_64)
               cache-name: android-debug-template-x86_64
               target: template_debug
               tests: false
               sconsflags: arch=x86_64 
+              mono: false
 
             - name: Template (target=template_release, arch=x86_32)
               cache-name: android-template-x86_32
               target: template_release
               tests: false
               sconsflags: arch=x86_32 
+              mono: false
 
             - name: Template (target=template_debug, arch=x86_32)
               cache-name: android-debug-template-x86_32
               target: template_debug
               tests: false
               sconsflags: arch=x86_32 
+              mono: false
   # BREAK FOR MONO
             - name: Template/w Mono (target=template_release, arch=arm64, module_mono_enabled=yes)
               cache-name: android-release-template-arm64-mono
