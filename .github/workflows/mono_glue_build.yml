@@ -126,6 +126,10 @@ jobs:
           cd ..
           ls -la
           pwd
+          ls -la ./mono-glue/GodotSharp
+          ls -la ./mono-glue/GodotSharp/Tools
+          ls -la ./mono-glue/GodotSharp/Tools/nupkgs
+
 
       - uses: BetaHuhn/do-spaces-action@v2
         with:
@@ -138,7 +142,7 @@ jobs:
 
       - name: Push to NuGet
         run: |
-          for pkg in ./mono-glue/GodotSharp/Tools/nupkgs/*.nupkg; do
+          for pkg in $(pwd)/mono-glue/GodotSharp/Tools/nupkgs/*.nupkg; do
             echo "Pushing $pkg to NuGet.org..."
             dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate
           done
