@@ -112,21 +112,20 @@ jobs:
 
       - name: Generate C# glue
         run: |
-          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue ./mono-glue
+          ./bin/blazium.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue ./modules/mono/glue
 
       - name: Generate Nuget Packages
         run: |
           mkdir -p nupkgs
-          python modules/mono/build_scripts/build_assemblies.py --godot-output-dir ./monoglue
-          python modules/mono/build_scripts/build_assemblies.py --godot-output-dir ./monoglue --push-nupkgs-local "./nupkgs"
+          python modules/mono/build_scripts/build_assemblies.py --godot-output-dir ./bin --push-nupkgs-local "./nupkgs"
 
       - name: Create tar.gz Archive
         run: |
           mkdir -p combined/GodotSharp
           mkdir -p combined/GodotSharpEditor
 
-          cp -r ./mono-glue/GodotSharp/GodotSharp/Generated/* combined/GodotSharp/
-          cp -r ./mono-glue/GodotSharp/GodotSharpEditor/Generated/* combined/GodotSharpEditor
+          cp -r ./modules/mono/glue/GodotSharp/GodotSharp/Generated/* combined/GodotSharp/
+          cp -r ./modules/mono/glue/GodotSharp/GodotSharpEditor/Generated/* combined/GodotSharpEditor
           cd combined
           tar -czvf ../monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz .
           cd ..
