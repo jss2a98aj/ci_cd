@@ -134,6 +134,15 @@ jobs:
           source: monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
           out_dir: monoglue/${{ github.event.client_payload.type || 'nightly' }}
 
+      - name: Push to NuGet
+        run: |
+          for pkg in ./mono-glue/GodotSharp/Tools/nupkgs/*.nupkg; do
+            echo "Pushing $pkg to NuGet.org..."
+            dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate
+          done
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
       - name: Notify Cerebro of Build Success
         if: success() # Only runs if the job was successful
         uses: ./.github/actions/cerebro-completed
