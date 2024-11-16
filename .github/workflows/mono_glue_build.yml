@@ -126,8 +126,8 @@ jobs:
           password: ${{ secrets.ES_PASSWORD }}
           credential_id: ${{ secrets.CREDENTIAL_ID }}
           totp_secret: ${{ secrets.ES_TOTP_SECRET }}
-          dir_path: ./nupkgs
-          output_path: ./nupkgs_signed
+          dir_path: "./nupkgs"
+          output_path: "./nupkgs_signed"
           environment_name: PROD
 
       - name: Create tar.gz Archive
