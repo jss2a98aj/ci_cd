@@ -443,18 +443,25 @@ jobs:
           if: matrix.mono
           run: |
             TYPE=${{ github.event.client_payload.type || 'nightly' }}
-            URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+            URL="https://cdn.blazium.app/monoglue/${TYPE}/monoglue-${TYPE}.tar.gz"
             
             # Download the file
             curl -L $URL -o monoglue.tar.gz
+
+            # Extract the entire archive to a temporary directory
+            mkdir -p temp_extract
+            tar -xzvf monoglue.tar.gz -C temp_extract
 
             # Create target directories if they don't exist
             mkdir -p modules/mono/glue/GodotSharp/GodotSharp
             mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
 
-            # Extract the specific directories from the tar.gz file to their target locations
-            tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
-            tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
+            # Move the extracted folders to their target locations
+            mv temp_extract/GodotSharp/* modules/mono/glue/GodotSharp/GodotSharp/
+            mv temp_extract/GodotSharpEditor/* modules/mono/glue/GodotSharp/GodotSharpEditor/
+
+            # Clean up the temporary directory
+            rm -rf temp_extract monoglue.tar.gz
 
 
         - name: Compilation
