@@ -119,6 +119,17 @@ jobs:
           mkdir -p nupkgs
           python modules/mono/build_scripts/build_assemblies.py --godot-output-dir ./bin --push-nupkgs-local "./nupkgs"
 
+      - uses: bioblaze/sslcom-code-signer@v4
+        with:
+          command: sign
+          username: ${{ secrets.ES_USERNAME }}
+          password: ${{ secrets.ES_PASSWORD }}
+          credential_id: ${{ secrets.CREDENTIAL_ID }}
+          totp_secret: ${{ secrets.ES_TOTP_SECRET }}
+          dir_path: ./nupkgs
+          output_path: ./nupkgs_signed
+          environment_name: PROD
+
       - name: Create tar.gz Archive
         run: |
           mkdir -p combined/GodotSharp
@@ -142,12 +153,15 @@ jobs:
 
       - name: Push to NuGet
         run: |
-          for pkg in ./nupkgs/*.nupkg; do
+          for pkg in ./nupkgs_signed/*.nupkg; do
+            echo "Verifying $pkg for Signing"
+            dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT
             echo "Pushing $pkg to NuGet.org..."
             dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate
           done
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_CERT_FINGERPRINT: ${{ secrets.NUGET_CERT_FINGERPRINT }}
 
       - name: Notify Cerebro of Build Success
         if: success() # Only runs if the job was successful
