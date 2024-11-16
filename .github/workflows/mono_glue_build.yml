@@ -124,6 +124,8 @@ jobs:
           cd combined
           tar -czvf ../monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz .
           cd ..
+          ls -la
+          pwd
 
       - uses: BetaHuhn/do-spaces-action@v2
         with:
