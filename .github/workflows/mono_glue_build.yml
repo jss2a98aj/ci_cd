@@ -36,7 +36,6 @@ jobs:
     steps:
       - name: Download and Check Build Sha
         id: compile
-        if: matrix.mono
         run: |
           TYPE=${{ github.event.client_payload.type || 'nightly' }}
           URL="https://cdn.blazium.app/monoglue/${TYPE}/build.sha"
