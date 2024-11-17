@@ -29,7 +29,7 @@ concurrency:
 jobs:
 
   compile-check:
-    name: 🔍 Get Latest SHA
+    name: 🔍 Validate Latest SHA
     runs-on: ubuntu-latest
     outputs:
       compile: ${{ steps.compile.outputs.value }}
@@ -65,7 +65,7 @@ jobs:
   build-monoglue:
     runs-on: "ubuntu-20.04"
     needs: compile-check
-    if: ${{ needs.compile-check.outputs.compile }}
+    if: ${{ !needs.compile-check.outputs.compile }}
     name: Mono Editor Build
     steps:
       - name: Checkout Repository
