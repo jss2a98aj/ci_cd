@@ -69,7 +69,7 @@ jobs:
   build-monoglue:
     runs-on: "ubuntu-20.04"
     needs: compile-check
-    if: ${{ needs.compile-check.outputs.compile == "true" }}
+    if: ${{ needs.compile-check.outputs.compile == 'true' }}
     name: Mono Editor Build
     steps:
       - name: Checkout Repository
