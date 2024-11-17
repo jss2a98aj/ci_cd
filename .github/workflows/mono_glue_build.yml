@@ -20,15 +20,43 @@ env:
   TSAN_OPTIONS: suppressions=misc/error_suppressions/tsan.txt
   TERM: 'xterm'
   DISPLAY: ':0'
-  DEPLOY_TYPE: web-editor
+  DEPLOY_TYPE: monoglue
 
 concurrency:
   group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-monoglue
   cancel-in-progress: true
 
 jobs:
+
+  compile-check:
+    name: 🔍 Get Latest SHA
+    runs-on: ubuntu-latest
+    outputs:
+      compile: ${{ steps.compile.outputs.value }}
+    steps:
+      - name: Download and Check Build Sha
+        id: compile
+        if: matrix.mono
+        run: |
+          TYPE=${{ github.event.client_payload.type || 'nightly' }}
+          URL="https://cdn.blazium.app/monoglue/${TYPE}/build.sha"
+          
+          # Download the file
+          curl -L $URL -o build.sha
+          
+          # Read the downloaded SHA and compare
+          DOWNLOADED_SHA=$(cat build.sha)
+          if [ "${{ inputs.build_sha }}" = "$DOWNLOADED_SHA" ]; then
+            echo "value=false" >> $GITHUB_OUTPUT
+          else
+            echo "value=true" >> $GITHUB_OUTPUT
+          fi
+
+
   build-monoglue:
     runs-on: "ubuntu-20.04"
+    needs: compile-check
+    if: ${{ needs.compile-check.outputs.compile }}
     name: Mono Editor Build
     steps:
       - name: Checkout Repository
@@ -139,6 +167,7 @@ jobs:
           cd combined
           tar -czvf ../monoglue-${{ github.event.client_payload.type || 'nightly' }}.tar.gz .
           cd ..
+          echo ${{ inputs.build_sha }} >> build.sha
 
 
       - uses: BetaHuhn/do-spaces-action@v2
@@ -162,6 +191,15 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
           NUGET_CERT_FINGERPRINT: ${{ secrets.NUGET_CERT_FINGERPRINT }}
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: build.sha
+          out_dir: monoglue/${{ github.event.client_payload.type || 'nightly' }}
 
       - name: Notify Cerebro of Build Success
         if: success() # Only runs if the job was successful
