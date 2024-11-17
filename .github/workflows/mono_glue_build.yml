@@ -41,16 +41,25 @@ jobs:
           TYPE=${{ github.event.client_payload.type || 'nightly' }}
           URL="https://cdn.blazium.app/monoglue/${TYPE}/build.sha"
           
-          # Download the file
-          curl -L $URL -o build.sha
-          
-          # Read the downloaded SHA and compare
-          DOWNLOADED_SHA=$(cat build.sha)
-          if [ "${{ inputs.build_sha }}" = "$DOWNLOADED_SHA" ]; then
-            echo "value=false" >> $GITHUB_OUTPUT
+          # Check if the file exists on the server
+          if curl --head --fail --silent $URL > /dev/null; then
+            echo "build.sha exists. Proceeding to download..."
+            
+            # Download the file
+            curl -L $URL -o build.sha
+            
+            # Read the downloaded SHA and compare
+            DOWNLOADED_SHA=$(cat build.sha)
+            if [ "${{ inputs.build_sha }}" = "$DOWNLOADED_SHA" ]; then
+              echo "value=false" >> $GITHUB_OUTPUT
+            else
+              echo "value=true" >> $GITHUB_OUTPUT
+            fi
           else
+            echo "build.sha does not exist on the server."
             echo "value=true" >> $GITHUB_OUTPUT
           fi
+
 
 
   build-monoglue:
