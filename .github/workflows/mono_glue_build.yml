@@ -49,8 +49,8 @@ jobs:
             
             # Read the downloaded SHA and compare
             DOWNLOADED_SHA=$(cat build.sha)
-            echo "Downloaded build.sha: $DOWNLOADED_SHA" >> $GITHUB_SUMMARY
-            echo "Provided SHA: ${{ inputs.build_sha }}" >> $GITHUB_SUMMARY
+            echo "Downloaded build.sha: $DOWNLOADED_SHA" >> $GITHUB_STEP_SUMMARY
+            echo "Provided SHA: ${{ inputs.build_sha }}" >> $GITHUB_STEP_SUMMARY
             if [ "${{ inputs.build_sha }}" = "$DOWNLOADED_SHA" ]; then
               echo "value=false" >> $GITHUB_OUTPUT
             else
