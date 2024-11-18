@@ -54,13 +54,11 @@ jobs:
     name: 🔍 Validate Latest SHA
     needs: compile-check
     runs-on: ubuntu-latest
-    outputs:
-      compile: ${{ steps.compile.outputs.should_compile }}
     steps:
 
       - name: Checkout Repository
         run: |
-          echo ${{ needs.compile-check.outputs.compile }}
+          echo "${{ needs.compile-check.outputs.compile }}"
 
 
   build-monoglue:

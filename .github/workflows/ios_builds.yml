@@ -194,7 +194,7 @@ jobs:
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}/template
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/template
 
 
       - name: Upload artifact
