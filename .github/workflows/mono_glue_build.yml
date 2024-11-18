@@ -32,38 +32,15 @@ jobs:
     name: 🔍 Validate Latest SHA
     runs-on: ubuntu-latest
     outputs:
-      compile: ${{ steps.compile.outputs.value }}
+      compile: ${{ steps.compile.outputs.should_compile }}
     steps:
-      - name: Download and Check Build Sha
-        id: compile
-        run: |
-          TYPE=${{ github.event.client_payload.type || 'nightly' }}
-          URL="https://cdn.blazium.app/monoglue/${TYPE}/build.sha"
-          
-          # Check if the file exists on the server
-          if curl --head --fail --silent $URL > /dev/null; then
-            echo "build.sha exists. Proceeding to download..."
-            
-            # Download the file
-            curl -L $URL -o build.sha
-            
-            # Read the downloaded SHA and compare
-            DOWNLOADED_SHA=$(cat build.sha)
-            echo "Downloaded build.sha: $DOWNLOADED_SHA" >> $GITHUB_STEP_SUMMARY
-            echo "Provided SHA: ${{ inputs.build_sha }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ inputs.build_sha }}" = "$DOWNLOADED_SHA" ]; then
-              echo "SHA values match. Setting value=false" >> $GITHUB_STEP_SUMMARY
-              echo "value=false" >> $GITHUB_OUTPUT
-            else
-              echo "SHA values do not match. Setting value=true" >> $GITHUB_STEP_SUMMARY
-              echo "value=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "build.sha does not exist on the server. Setting value=true" >> $GITHUB_STEP_SUMMARY
-            echo "value=true" >> $GITHUB_OUTPUT
-          fi
 
-
+      - name: Compilation
+        uses: ./.github/actions/version-checker
+        with:
+          deploy_type: monoglue
+          build_type: ${{ github.event.client_payload.type || 'nightly' }}
+          build_sha: ${{ inputs.build_sha }}
 
 
   build-monoglue:
