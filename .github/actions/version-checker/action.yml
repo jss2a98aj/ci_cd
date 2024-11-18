@@ -49,3 +49,4 @@ runs:
           else
             echo "build.sha does not exist on the server. Setting should_compile=true" >> $GITHUB_STEP_SUMMARY
             echo "should_compile=true" >> $GITHUB_OUTPUT
+          fi
