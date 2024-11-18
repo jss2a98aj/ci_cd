@@ -29,7 +29,7 @@ concurrency:
 jobs:
 
   compile-check:
-    name: 🔍 Validate Latest SHA
+    name: Checking Monoglue build.sha
     runs-on: ubuntu-latest
     outputs:
       compile: ${{ steps.version-check.outputs.should_compile }}

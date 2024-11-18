@@ -40,7 +40,7 @@ jobs:
   web-build:
     name: 🌐 Web
     needs: [get-latest-sha, static-checks]
-    if: ${{ github.event.client_payload.web_build == true }}
+    if: contains(github.event.client_payload.build, 'web')
     uses: ./.github/workflows/web_builds.yml
     secrets: inherit
     with:
@@ -50,7 +50,7 @@ jobs:
   monoglue-build:
     name: Mono Glue
     needs: [get-latest-sha, static-checks]
-    if: ${{ github.event.client_payload.monoglue_build == true }}
+    if: contains(github.event.client_payload.build, 'monoglue')
     uses: ./.github/workflows/mono_glue_build.yml
     secrets: inherit
     with:
@@ -80,7 +80,7 @@ jobs:
   linux-build:
     name: 🐧 Linux
     needs: [monoglue-build]
-    if: ${{ github.event.client_payload.linux_build == true }}
+    if: contains(github.event.client_payload.build, 'linux')
     uses: ./.github/workflows/linux_builds.yml
     secrets: inherit
     with:
