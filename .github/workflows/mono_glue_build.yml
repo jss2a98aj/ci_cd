@@ -23,7 +23,7 @@ env:
   DEPLOY_TYPE: monoglue
 
 concurrency:
-  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-${{ env.DEPLOY_TYPE }}
+  group: ci-${{github.actor}}-${{ github.event.client_payload.type || 'nightly' }}-monoglue
   cancel-in-progress: true
 
 jobs:
