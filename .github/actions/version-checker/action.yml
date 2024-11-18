@@ -14,6 +14,9 @@ inputs:
   build_sha:
     description: SHA to compare against
     required: true
+  is_template:
+    description: Is this a Template?
+    default: 'false'
 
 outputs:
   should_compile:
@@ -25,8 +28,13 @@ runs:
     - name: Version Check
       shell: bash
       run: |
-          URL="${{ inputs.base_url }}/${{ inputs.deploy_type }}/${{ inputs.build_type }}/build.sha"
-          
+          # Determine the URL based on whether this is a template
+          if [ "${{ inputs.is_template }}" = "true" ]; then
+            URL="${{ inputs.base_url }}/${{ inputs.deploy_type }}/template/${{ inputs.build_type }}/build.sha"
+          else
+            URL="${{ inputs.base_url }}/${{ inputs.deploy_type }}/${{ inputs.build_type }}/build.sha"
+          fi
+
           # Check if the file exists on the server
           if curl --head --fail --silent $URL > /dev/null; then
             echo "build.sha exists. Proceeding to download..."
