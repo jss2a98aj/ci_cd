@@ -43,6 +43,7 @@ jobs:
           fetch-depth: 1
 
       - name: Compilation
+        id: compile
         uses: ./.github/actions/version-checker
         with:
           deploy_type: ${{ env.DEPLOY_TYPE }}

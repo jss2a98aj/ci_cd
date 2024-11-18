@@ -34,7 +34,7 @@ concurrency:
 jobs:
 
   editor-check:
-    name: 🔍 Validate Latest SHA
+    name: Checking Editor build.sha
     runs-on: ubuntu-latest
     outputs:
       compile: ${{ steps.compile.outputs.should_compile }}
@@ -48,6 +48,7 @@ jobs:
           fetch-depth: 1
 
       - name: Compilation
+        id: compile
         uses: ./.github/actions/version-checker
         with:
           deploy_type: ${{ env.DEPLOY_TYPE }}
