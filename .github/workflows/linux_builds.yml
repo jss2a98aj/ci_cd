@@ -145,11 +145,13 @@ jobs:
       # TODO: Figure out somehow how to embed this one.
       - name: Distro-specific Deps Install
         run: |
+          # Remove all existing third-party repositories
           sudo rm -f /etc/apt/sources.list.d/*
-          sudo add-apt-repository ppa:kisak/kisak-mesa
-          sudo apt-get install -qq mesa-vulkan-drivers
+
+          # Add architecture support for 32-bit
           sudo dpkg --add-architecture i386
 
+          # Update sources list to include default Ubuntu repositories
           sudo bash -c 'cat > /etc/apt/sources.list <<EOF
           deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse
           deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
@@ -157,7 +159,10 @@ jobs:
           deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse
           EOF'
 
+          # Update package lists
           sudo apt-get update
+
+          # Install required packages
           sudo apt-get install -y \
             build-essential \
             scons \
@@ -167,17 +172,26 @@ jobs:
             libx11-dev libx11-dev:i386 \
             libxcursor-dev libxcursor-dev:i386 \
             libxinerama-dev libxinerama-dev:i386 \
-            libgl1-mesa-dev libgl1-mesa-dev:i386 \
+            libgl1-mesa-dev libgl1-mesa-dev:i386 
+          sudo apt-get install -y \
             libglu1-mesa-dev \
             libasound2-dev \
             libpulse-dev \
             libudev-dev \
-            libxi-dev libxi-dev:i386 \ 
+            libxi-dev libxi-dev:i386 \
             libxrandr-dev libxrandr-dev:i386 \
             libwayland-dev \
-            libglu-dev \
-            libdbus-1-dev yasm xvfb wget unzip \
-            llvm libspeechd-dev speech-dispatcher fontconfig libfontconfig-dev
+            libdbus-1-dev 
+          sudo apt-get install -y \
+            yasm \
+            xvfb \
+            wget \
+            unzip \
+            llvm \
+            libspeechd-dev \
+            speech-dispatcher \
+            fontconfig \
+            libfontconfig-dev
 
       - name: Free disk space on runner
         run: |
@@ -227,7 +241,6 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: linuxbsd
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
@@ -485,7 +498,6 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: linuxbsd
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
