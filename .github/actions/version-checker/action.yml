@@ -30,7 +30,7 @@ runs:
       run: |
           # Determine the URL based on whether this is a template
           if [ "${{ inputs.is_template }}" = "true" ]; then
-            URL="${{ inputs.base_url }}/${{ inputs.deploy_type }}/template/${{ inputs.build_type }}/build.sha"
+            URL="${{ inputs.base_url }}/${{ inputs.deploy_type }}/${{ inputs.build_type }}/template/build.sha"
           else
             URL="${{ inputs.base_url }}/${{ inputs.deploy_type }}/${{ inputs.build_type }}/build.sha"
           fi

@@ -55,6 +55,10 @@ jobs:
           build_type: ${{ github.event.client_payload.type || 'nightly' }}
           build_sha: ${{ inputs.build_sha }}
 
+      - name: Debug Output
+        run: |
+          echo "Should Compile: ${{ steps.compile.outputs.should_compile }}"
+
   template-check:
     name: 🔍 Validate Latest SHA
     runs-on: ubuntu-latest
