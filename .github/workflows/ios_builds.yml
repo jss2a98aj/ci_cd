@@ -24,9 +24,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ios-template:
+
+  template-check:
+    name: Checking Templates build.sha
+    if: ${{ github.event.client_payload.build_templates == true }}
+    runs-on: ubuntu-latest
+    outputs:
+      compile: ${{ steps.compile.outputs.should_compile == 'true' }}
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/ci_cd
+          ref: nightly-testing
+          fetch-depth: 1
+
+      - name: Compilation
+        id: compile
+        uses: ./.github/actions/version-checker
+        with:
+          deploy_type: ${{ env.DEPLOY_TYPE }}
+          build_type: ${{ github.event.client_payload.type || 'nightly' }}
+          build_sha: ${{ inputs.build_sha }}
+          is_template: 'true'
+
+  build-templates:
     runs-on: macos-latest
-    name: ${{ matrix.name }}
+    name: Building ${{ matrix.name }}
+    needs: template-check
+    if: ${{ needs.template-check.outputs.compile == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -222,3 +249,22 @@ jobs:
           run_id: ${{ inputs.runner_id }}
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+  template-success:
+    name: Editor Success
+    needs: build-templates
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Create build.sha for Version Verification Later
+        run: |
+          echo ${{ inputs.build_sha }} >> build.sha
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: build.sha
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/template

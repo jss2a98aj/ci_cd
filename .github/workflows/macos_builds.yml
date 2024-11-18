@@ -23,9 +23,60 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  editor-check:
+    name: Checking Editor build.sha
+    if: ${{ github.event.client_payload.build_editors == true }}
+    runs-on: ubuntu-latest
+    outputs:
+      compile: ${{ steps.compile.outputs.should_compile }}
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/ci_cd
+          ref: nightly-testing
+          fetch-depth: 1
+
+      - name: Compilation
+        id: compile
+        uses: ./.github/actions/version-checker
+        with:
+          deploy_type: ${{ env.DEPLOY_TYPE }}
+          build_type: ${{ github.event.client_payload.type || 'nightly' }}
+          build_sha: ${{ inputs.build_sha }}
+
+  template-check:
+    name: Checking Templates build.sha
+    if: ${{ github.event.client_payload.build_templates == true }}
+    runs-on: ubuntu-latest
+    outputs:
+      compile: ${{ steps.compile.outputs.should_compile == 'true' }}
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/ci_cd
+          ref: nightly-testing
+          fetch-depth: 1
+
+      - name: Compilation
+        id: compile
+        uses: ./.github/actions/version-checker
+        with:
+          deploy_type: ${{ env.DEPLOY_TYPE }}
+          build_type: ${{ github.event.client_payload.type || 'nightly' }}
+          build_sha: ${{ inputs.build_sha }}
+          is_template: 'true'
+
+
   build-editors:
     runs-on: "macos-latest"
-    name: ${{ matrix.name }}
+    name: Building ${{ matrix.name }}
+    needs: editor-check
+    if: ${{ needs.editor-check.outputs.compile == 'true' }}
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -90,33 +141,30 @@ jobs:
         if: matrix.mono
         run: |
           TYPE=${{ github.event.client_payload.type || 'nightly' }}
-          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+          URL="https://cdn.blazium.app/monoglue/${TYPE}/monoglue-${TYPE}.tar.gz"
           
           # Download the file
           curl -L $URL -o monoglue.tar.gz
+
+          # Extract the entire archive to a temporary directory
+          mkdir -p temp_extract
+          tar -xzvf monoglue.tar.gz -C temp_extract
 
           # Create target directories if they don't exist
           mkdir -p modules/mono/glue/GodotSharp/GodotSharp
           mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
 
-          # Extract the specific directories from the tar.gz file to their target locations
-          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
-          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
+          # Move the extracted folders to their target locations
+          mv temp_extract/GodotSharp/* modules/mono/glue/GodotSharp/GodotSharp/
+          mv temp_extract/GodotSharpEditor/* modules/mono/glue/GodotSharp/GodotSharpEditor/
+
+          # Clean up the temporary directory
+          rm -rf temp_extract monoglue.tar.gz
 
       - name: Setup Vulkan SDK
         run: |
           sh misc/scripts/install_vulkan_sdk_macos.sh
           ls -la /usr/local
-
-      # - name: Download and extract MoltenVK
-      #   run: |
-      #     mkdir -p deps/moltenvk
-      #     pushd deps/moltenvk
-      #     curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
-      #     tar xf moltenvk.tar && rm -f moltenvk.tar
-      #     mv MoltenVK/MoltenVK/include/ MoltenVK/
-      #     mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
-      #     popd
 
       - name: Editor Compilation (x86_64)
         uses: ./.github/actions/godot-build
@@ -225,7 +273,7 @@ jobs:
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
 
 
       - name: Notify Cerebro of Build Success
@@ -248,9 +296,31 @@ jobs:
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
+  editor-success:
+    name: Editor Success
+    needs: build-editors
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Create build.sha for Version Verification Later
+        run: |
+          echo ${{ inputs.build_sha }} >> build.sha
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: build.sha
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}
+
+
   build-templates:
     runs-on: "macos-latest"
-    name: ${{ matrix.name }}
+    name: Building ${{ matrix.name }}
+    needs: template-check
+    if: ${{ needs.template-check.outputs.compile == 'true' }}
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -316,34 +386,30 @@ jobs:
         if: matrix.mono
         run: |
           TYPE=${{ github.event.client_payload.type || 'nightly' }}
-          URL="https://cdn.blazium.app/${TYPE}/monoglue/monoglue-${TYPE}.tar.gz"
+          URL="https://cdn.blazium.app/monoglue/${TYPE}/monoglue-${TYPE}.tar.gz"
           
           # Download the file
           curl -L $URL -o monoglue.tar.gz
+
+          # Extract the entire archive to a temporary directory
+          mkdir -p temp_extract
+          tar -xzvf monoglue.tar.gz -C temp_extract
 
           # Create target directories if they don't exist
           mkdir -p modules/mono/glue/GodotSharp/GodotSharp
           mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
 
-          # Extract the specific directories from the tar.gz file to their target locations
-          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharp GodotSharp
-          tar -xzvf monoglue.tar.gz --strip-components=1 -C modules/mono/glue/GodotSharp/GodotSharpEditor GodotSharpEditor
+          # Move the extracted folders to their target locations
+          mv temp_extract/GodotSharp/* modules/mono/glue/GodotSharp/GodotSharp/
+          mv temp_extract/GodotSharpEditor/* modules/mono/glue/GodotSharp/GodotSharpEditor/
+
+          # Clean up the temporary directory
+          rm -rf temp_extract monoglue.tar.gz
 
       - name: Setup Vulkan SDK
         run: |
           sh misc/scripts/install_vulkan_sdk_macos.sh
           ls -la /usr/local
-
-      # - name: Download and extract MoltenVK
-      #   run: |
-      #     mkdir -p deps/moltenvk
-      #     pushd deps/moltenvk
-      #     curl -L -o moltenvk.tar https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar
-      #     tar xf moltenvk.tar && rm -f moltenvk.tar
-      #     mv MoltenVK/MoltenVK/include/ MoltenVK/
-      #     mv MoltenVK/MoltenVK/static/MoltenVK.xcframework/ MoltenVK/
-      #     popd
-
 
 
       - name: Compilation (template_release, arm64)
@@ -447,7 +513,7 @@ jobs:
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
 
       - name: Notify Cerebro of Build Success
         if: success() # Only runs if the job was successful
@@ -468,3 +534,23 @@ jobs:
           run_id: ${{ inputs.runner_id }}
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
+
+  template-success:
+    name: Editor Success
+    needs: build-templates
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Create build.sha for Version Verification Later
+        run: |
+          echo ${{ inputs.build_sha }} >> build.sha
+
+      - uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.DO_ACCESS_KEY }}
+          secret_key: ${{ secrets.DO_SECRET_KEY }}
+          space_name: ${{ secrets.DO_SPACE_NAME }}
+          space_region: ${{ secrets.DO_SPACE_REGION }}
+          source: build.sha
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/template
+

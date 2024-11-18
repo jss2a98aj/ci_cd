@@ -35,6 +35,7 @@ jobs:
 
   editor-check:
     name: Checking Editor build.sha
+    if: ${{ github.event.client_payload.build_editors == true }}
     runs-on: ubuntu-latest
     outputs:
       compile: ${{ steps.compile.outputs.should_compile }}
@@ -55,15 +56,12 @@ jobs:
           build_type: ${{ github.event.client_payload.type || 'nightly' }}
           build_sha: ${{ inputs.build_sha }}
 
-      - name: Debug Output
-        run: |
-          echo "Should Compile: ${{ steps.compile.outputs.should_compile }}"
-
   template-check:
-    name: 🔍 Validate Latest SHA
+    name: Checking Templates build.sha
+    if: ${{ github.event.client_payload.build_templates == true }}
     runs-on: ubuntu-latest
     outputs:
-      compile: ${{ steps.compile.outputs.should_compile }}
+      compile: ${{ steps.compile.outputs.should_compile == 'true' }}
     steps:
 
       - name: Checkout Repository
@@ -74,15 +72,17 @@ jobs:
           fetch-depth: 1
 
       - name: Compilation
+        id: compile
         uses: ./.github/actions/version-checker
         with:
           deploy_type: ${{ env.DEPLOY_TYPE }}
           build_type: ${{ github.event.client_payload.type || 'nightly' }}
           build_sha: ${{ inputs.build_sha }}
+          is_template: 'true'
 
-  android-editors:
+  build-editors:
     runs-on: "ubuntu-20.04"
-    name: ${{ matrix.name }}
+    name: Building ${{ matrix.name }}
     needs: editor-check
     if: ${{ needs.editor-check.outputs.compile == 'true' }}
     strategy:
@@ -322,7 +322,7 @@ jobs:
 
   editor-success:
     name: Editor Success
-    needs: android-editors
+    needs: build-editors
     runs-on: ubuntu-latest
     steps:
 
@@ -337,12 +337,12 @@ jobs:
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: build.sha
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}
 
 
-  android-templates:
+  build-templates:
     runs-on: "ubuntu-20.04"
-    name: ${{ matrix.name }}
+    name: Building ${{ matrix.name }}
     needs: template-check
     if: ${{ needs.template-check.outputs.compile == 'true' }}
     strategy:
@@ -568,27 +568,13 @@ jobs:
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
 
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
-
-      - name: Create build.sha for Version Verification Later
-        run: |
-          echo ${{ inputs.build_sha }} >> build.sha
-
-      - uses: BetaHuhn/do-spaces-action@v2
-        with:
-          access_key: ${{ secrets.DO_ACCESS_KEY }}
-          secret_key: ${{ secrets.DO_SECRET_KEY }}
-          space_name: ${{ secrets.DO_SPACE_NAME }}
-          space_region: ${{ secrets.DO_SPACE_REGION }}
-          source: build.sha
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
-
 
       - name: Notify Cerebro of Build Success
         if: success() # Only runs if the job was successful
@@ -613,7 +599,7 @@ jobs:
 
   template-success:
     name: Editor Success
-    needs: android-templates
+    needs: build-templates
     runs-on: ubuntu-latest
     steps:
 
@@ -628,4 +614,4 @@ jobs:
           space_name: ${{ secrets.DO_SPACE_NAME }}
           space_region: ${{ secrets.DO_SPACE_REGION }}
           source: build.sha
-          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}
+          out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/template

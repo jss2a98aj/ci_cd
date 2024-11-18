@@ -50,22 +50,6 @@ jobs:
           build_type: ${{ github.event.client_payload.type || 'nightly' }}
           build_sha: ${{ inputs.build_sha }}
 
-      - name: Debug Output
-        run: |
-          echo "Should Compile: ${{ steps.version-check.outputs.should_compile }}"
-
-
-  compile:
-    name: 🔍 Validate Latest SHA
-    needs: compile-check
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout Repository
-        run: |
-          echo "${{ needs.compile-check.outputs.compile }}"
-
-
   build-monoglue:
     runs-on: "ubuntu-20.04"
     needs: compile-check
