@@ -415,7 +415,7 @@ jobs:
             libx11-dev libx11-dev:i386 \
             libxcursor-dev libxcursor-dev:i386 \
             libxinerama-dev libxinerama-dev:i386 \
-            libgl1-mesa-dev libgl1-mesa-dev:i386 \
+            libgl1-mesa-dev libgl1-mesa-dev:i386 
           sudo apt-get install -y \
             libglu1-mesa-dev \
             libasound2-dev \
@@ -424,7 +424,7 @@ jobs:
             libxi-dev libxi-dev:i386 \
             libxrandr-dev libxrandr-dev:i386 \
             libwayland-dev \
-            libdbus-1-dev \
+            libdbus-1-dev 
           sudo apt-get install -y \
             yasm \
             xvfb \
