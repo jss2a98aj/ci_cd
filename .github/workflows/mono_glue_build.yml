@@ -35,6 +35,13 @@ jobs:
       compile: ${{ steps.compile.outputs.should_compile }}
     steps:
 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/ci_cd
+          ref: nightly-testing
+          fetch-depth: 1
+
       - name: Compilation
         uses: ./.github/actions/version-checker
         with:
