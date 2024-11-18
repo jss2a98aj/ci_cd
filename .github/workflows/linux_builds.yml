@@ -149,7 +149,14 @@ jobs:
           sudo add-apt-repository ppa:kisak/kisak-mesa
           sudo apt-get install -qq mesa-vulkan-drivers
           sudo dpkg --add-architecture i386
-          sudo cp -f godot/misc/ci/sources.list /etc/apt/sources.list
+
+          sudo bash -c 'cat > /etc/apt/sources.list <<EOF
+          deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse
+          deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
+          deb http://archive.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse
+          deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse
+          EOF'
+
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
@@ -385,7 +392,14 @@ jobs:
           sudo add-apt-repository ppa:kisak/kisak-mesa
           sudo apt-get install -qq mesa-vulkan-drivers
           sudo dpkg --add-architecture i386
-          sudo cp -f godot/misc/ci/sources.list /etc/apt/sources.list
+          
+          sudo bash -c 'cat > /etc/apt/sources.list <<EOF
+          deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse
+          deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
+          deb http://archive.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse
+          deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse
+          EOF'
+          
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
