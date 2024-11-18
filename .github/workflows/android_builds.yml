@@ -346,7 +346,6 @@ jobs:
     needs: template-check
     if: ${{ needs.template-check.outputs.compile == 'true' }}
     strategy:
-      max-parallel: 6
       fail-fast: false
       matrix:
         include:
@@ -598,7 +597,7 @@ jobs:
 
 
   template-success:
-    name: Editor Success
+    name: Template Success
     needs: build-templates
     runs-on: ubuntu-latest
     steps:

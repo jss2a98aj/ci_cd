@@ -217,7 +217,6 @@ jobs:
     needs: template-check
     if: ${{ needs.template-check.outputs.compile == 'true' }}
     strategy:
-      max-parallel: 4
       fail-fast: true
       matrix:
         include:
@@ -367,7 +366,7 @@ jobs:
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
   template-success:
-    name: Editor Success
+    name: Template Success
     needs: build-templates
     runs-on: ubuntu-latest
     steps:
