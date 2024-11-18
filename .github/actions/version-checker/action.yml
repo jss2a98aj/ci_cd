@@ -26,6 +26,7 @@ runs:
   using: "composite"
   steps:
     - name: Version Check
+      id: version-check
       shell: bash
       run: |
           # Determine the URL based on whether this is a template

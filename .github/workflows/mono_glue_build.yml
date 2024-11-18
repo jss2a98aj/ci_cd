@@ -32,7 +32,7 @@ jobs:
     name: 🔍 Validate Latest SHA
     runs-on: ubuntu-latest
     outputs:
-      compile: ${{ steps.compile.outputs.should_compile }}
+      compile: ${{ steps.version-check.outputs.should_compile }}
     steps:
 
       - name: Checkout Repository
@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 1
 
       - name: Compilation
-        id: compile
+        id: version-check
         uses: ./.github/actions/version-checker
         with:
           deploy_type: ${{ env.DEPLOY_TYPE }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Debug Output
         run: |
-          echo "Should Compile: ${{ steps.compile.outputs.should_compile }}"
+          echo "Should Compile: ${{ steps.version-check.outputs.should_compile }}"
 
 
   compile:
