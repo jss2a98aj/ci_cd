@@ -389,8 +389,8 @@ jobs:
       - name: Distro-specific Deps Install
         run: |
           #sudo rm -f /etc/apt/sources.list.d/*
-          sudo add-apt-repository ppa:kisak/kisak-mesa
-          sudo apt-get install -qq mesa-vulkan-drivers
+          # sudo add-apt-repository ppa:kisak/kisak-mesa
+          # sudo apt-get install -qq mesa-vulkan-drivers
           sudo dpkg --add-architecture i386
           
           # sudo bash -c 'cat > /etc/apt/sources.list <<EOF
