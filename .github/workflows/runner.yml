@@ -46,6 +46,15 @@ jobs:
         with:
           file_path: version.py
 
+      - name: Does Node.js Exist?
+        run: |
+          node -v
+          if [ -d "./cicd" ]; then
+            echo "Folder exists" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Folder does not exist" >> $GITHUB_STEP_SUMMARY
+          fi
+
 
 
   static-checks:
