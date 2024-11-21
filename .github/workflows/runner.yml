@@ -57,12 +57,6 @@ jobs:
           MINOR_VERSION: ${{ steps.version.outputs.external_minor }}
           PATCH_VERSION: ${{ steps.version.outputs.external_patch }}
         run: |
-          node -v
-          if [ -d "./cicd" ]; then
-            echo "Folder exists" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Folder does not exist" >> $GITHUB_STEP_SUMMARY
-          fi
           node ./cicd/scripts/changelog.js $(pwd)
           cat $(pwd)/changelog.json
 

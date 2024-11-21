@@ -94,7 +94,6 @@ async function generateChangelog(baseBranch, currentBranch, outputDir = __dirnam
     const contributorStats = {};
     let firstChangeDate = null;
     let lastChangeDate = null;
-    let version = { major: 0, minor: 0, patch: 0 };
 
     // Loop through commits to gather stats and changelog
     for (const commit of commits) {
