@@ -412,26 +412,26 @@ jobs:
       - name: Download and extract web editor package
         run: |
           # Create storage directory
-          mkdir -p storage
+          mkdir -p cicd/storage
           
           # Download the .tar.gz package instead of .zip
           curl -L "${{ env.CDN_URL }}web-editor/${{ github.event.client_payload.type || 'nightly' }}/web-editor-${{ github.event.client_payload.type || 'nightly' }}.tar.gz" -o storage/web-editor.tar.gz
           
           # Extract the main .tar.gz file
-          tar -xzf storage/web-editor.tar.gz -C storage
+          tar -xzf cicd/storage/web-editor.tar.gz -C cicd/storage
           
           # Find the inner .zip file and unzip it
-          inner_zip=$(find storage -type f -name 'blazium.web.editor.*.zip' | head -n 1)
-          mkdir -p ./web-editor/static
-          unzip "$inner_zip" -d ./web-editor/static
+          inner_zip=$(find cicd/storage -type f -name 'blazium.web.editor.*.zip' | head -n 1)
+          mkdir -p ./cicd/web-editor/static
+          unzip "$inner_zip" -d ./cicd/web-editor/static
           
           # Rename the main HTML file
-          mv ./web-editor/static/blazium.editor.html ./web-editor/static/index.html
+          mv ./cicd/web-editor/static/blazium.editor.html ./web-editor/static/index.html
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./web-editor
+          context: ./cicd/web-editor
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_NAME_BASE }}-${{ github.event.client_payload.type || 'nightly' }}:latest

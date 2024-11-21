@@ -1,0 +1,72 @@
+name: Set version.py
+description: Update version.py with provided version details
+
+inputs:
+  file_path:
+    description: Path to the version.py file
+    required: true
+  external_major:
+    description: Major version to set
+    required: true
+  external_minor:
+    description: Minor version to set
+    required: true
+  external_patch:
+    description: Patch version to set
+    required: true
+  external_status:
+    description: Status to set (e.g., nightly, stable)
+    required: true
+  external_sha:
+    description: SHA to set
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate version.py existence
+      id: validate-file
+      shell: bash
+      run: |
+        if [ ! -f "${{ inputs.file_path }}" ]; then
+          echo "Error: The file '${{ inputs.file_path }}' does not exist." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        echo "File '${{ inputs.file_path }}' exists. Proceeding to update version information." >> $GITHUB_STEP_SUMMARY
+
+    - name: Set version.py
+      id: set-version
+      shell: bash
+      run: |
+        # Validate inputs
+        if [ -z "${{ inputs.external_major }}" ] || [ -z "${{ inputs.external_minor }}" ] || [ -z "${{ inputs.external_patch }}" ] || [ -z "${{ inputs.external_status }}" ] || [ -z "${{ inputs.external_sha }}" ]; then
+          echo "Error: One or more required inputs are missing." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+        # Log inputs
+        echo "Updating version information in '${{ inputs.file_path }}' with the following values:" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Major**: ${{ inputs.external_major }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Minor**: ${{ inputs.external_minor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Patch**: ${{ inputs.external_patch }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Status**: ${{ inputs.external_status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **External SHA**: ${{ inputs.external_sha }}" >> $GITHUB_STEP_SUMMARY
+
+        # Update the file using sed
+        sed -i "s/^external_major = .*/external_major = ${{ inputs.external_major }}/" "${{ inputs.file_path }}"
+        sed -i "s/^external_minor = .*/external_minor = ${{ inputs.external_minor }}/" "${{ inputs.file_path }}"
+        sed -i "s/^external_patch = .*/external_patch = ${{ inputs.external_patch }}/" "${{ inputs.file_path }}"
+        sed -i "s/^external_status = .*/external_status = \"${{ inputs.external_status }}\"/" "${{ inputs.file_path }}"
+        sed -i "s/^external_sha = .*/external_sha = \"${{ inputs.external_sha }}\"/" "${{ inputs.file_path }}"
+
+        # Validate the updates
+        if grep -q "^external_major = ${{ inputs.external_major }}" "${{ inputs.file_path }}" &&
+           grep -q "^external_minor = ${{ inputs.external_minor }}" "${{ inputs.file_path }}" &&
+           grep -q "^external_patch = ${{ inputs.external_patch }}" "${{ inputs.file_path }}" &&
+           grep -q "^external_status = \"${{ inputs.external_status }}\"" "${{ inputs.file_path }}" &&
+           grep -q "^external_sha = \"${{ inputs.external_sha }}\"" "${{ inputs.file_path }}"; then
+          echo "Successfully updated version information in '${{ inputs.file_path }}'." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "Error: Failed to update version information in '${{ inputs.file_path }}'." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi

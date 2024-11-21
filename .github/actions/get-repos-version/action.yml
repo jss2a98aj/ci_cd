@@ -1,0 +1,69 @@
+name: Parse version.py
+description: Parse version.py and extract version details
+
+inputs:
+  file_path:
+    description: Path to the version.py file
+    required: true
+
+outputs:
+  external_major:
+    description: Major version extracted from version.py
+    value: ${{ steps.parse-version.outputs.external_major }}
+  external_minor:
+    description: Minor version extracted from version.py
+    value: ${{ steps.parse-version.outputs.external_minor }}
+  external_patch:
+    description: Patch version extracted from version.py
+    value: ${{ steps.parse-version.outputs.external_patch }}
+  external_status:
+    description: Status extracted from version.py
+    value: ${{ steps.parse-version.outputs.external_status }}
+  external_sha:
+    description: SHA extracted from version.py
+    value: ${{ steps.parse-version.outputs.external_sha }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate version.py existence
+      id: validate-file
+      shell: bash
+      run: |
+        if [ ! -f "${{ inputs.file_path }}" ]; then
+          echo "Error: The file '${{ inputs.file_path }}' does not exist." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        echo "File '${{ inputs.file_path }}' exists. Proceeding with parsing." >> $GITHUB_STEP_SUMMARY
+
+    - name: Parse version.py
+      id: parse-version
+      shell: bash
+      run: |
+        # Extract variables from the file
+        external_major=$(grep '^external_major' "${{ inputs.file_path }}" | awk -F'= ' '{print $2}' | tr -d ' ')
+        external_minor=$(grep '^external_minor' "${{ inputs.file_path }}" | awk -F'= ' '{print $2}' | tr -d ' ')
+        external_patch=$(grep '^external_patch' "${{ inputs.file_path }}" | awk -F'= ' '{print $2}' | tr -d ' ')
+        external_status=$(grep '^external_status' "${{ inputs.file_path }}" | awk -F'= ' '{print $2}' | tr -d '" ')
+        external_sha=$(grep '^external_sha' "${{ inputs.file_path }}" | awk -F'= ' '{print $2}' | tr -d '" ')
+
+        # Check if all required values were found
+        if [ -z "$external_major" ] || [ -z "$external_minor" ] || [ -z "$external_patch" ] || [ -z "$external_status" ] || [ -z "$external_sha" ]; then
+          echo "Error: One or more variables could not be parsed from '${{ inputs.file_path }}'." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+        # Write to outputs
+        echo "external_major=$external_major" >> $GITHUB_OUTPUT
+        echo "external_minor=$external_minor" >> $GITHUB_OUTPUT
+        echo "external_patch=$external_patch" >> $GITHUB_OUTPUT
+        echo "external_status=$external_status" >> $GITHUB_OUTPUT
+        echo "external_sha=$external_sha" >> $GITHUB_OUTPUT
+
+        # Add to step summary
+        echo "### Parsed version.py Values" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Major**: $external_major" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Minor**: $external_minor" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Patch**: $external_patch" >> $GITHUB_STEP_SUMMARY
+        echo "- **External Status**: $external_status" >> $GITHUB_STEP_SUMMARY
+        echo "- **External SHA**: $external_sha" >> $GITHUB_STEP_SUMMARY

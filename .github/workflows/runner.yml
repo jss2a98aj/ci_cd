@@ -11,12 +11,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   get-latest-sha:
-    name: 🔍 Get Latest SHA
+    name: 🔍 Get Latest SHA & Base Version
     runs-on: ubuntu-latest
     outputs:
       build_sha: ${{ steps.get_sha.outputs.sha }}
+      external_major: ${{ steps.version.outputs.external_major }}
+      external_minor: ${{ steps.version.outputs.external_minor }}
+      external_patch: ${{ steps.version.outputs.external_patch }}
+      external_status: ${{ steps.version.outputs.external_status }}
+      external_sha: ${{ steps.version.outputs.external_sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,9 +28,25 @@ jobs:
           repository: blazium-engine/blazium
           ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
           fetch-depth: 1
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: blazium-engine/ci_cd
+          ref: nightly-testing
+          fetch-depth: 1
+
       - name: Get Latest Commit SHA
         id: get_sha
         run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Parse version.py
+        id: version
+        uses: ./.github/actions/parse-version
+        with:
+          file_path: ./version.py
+
+
 
   static-checks:
     name: 📊 Static checks
