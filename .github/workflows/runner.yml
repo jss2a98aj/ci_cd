@@ -47,6 +47,15 @@ jobs:
           file_path: version.py
 
       - name: Does Node.js Exist?
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_OWNER: blazium-engine
+          GITHUB_REPO: blazium
+          BASE_BRANCH: ${{ steps.version.outputs.external_sha }}
+          CURRENT_BRANCH: ${{ steps.get_sha.outputs.sha }}
+          MAJOR_VERSION: ${{ steps.version.outputs.external_major }}
+          MINOR_VERSION: ${{ steps.version.outputs.external_minor }}
+          PATCH_VERSION: ${{ steps.version.outputs.external_patch }}
         run: |
           node -v
           if [ -d "./cicd" ]; then
@@ -54,6 +63,8 @@ jobs:
           else
             echo "Folder does not exist" >> $GITHUB_STEP_SUMMARY
           fi
+          node ./cicd/scripts/changelog.js
+          cat ./changelog.json
 
 
 

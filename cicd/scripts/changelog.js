@@ -1,4 +1,3 @@
-require('dotenv').config();
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -9,6 +8,14 @@ const owner = process.env.GITHUB_OWNER; // The owner of the repository
 const repo = process.env.GITHUB_REPO; // The repository name
 const baseBranch = process.env.BASE_BRANCH; // The base branch
 const currentBranch = process.env.CURRENT_BRANCH; // The current branch
+
+
+var version = {
+    major: process.env.MAJOR_VERSION || 0,
+    minor: process.env.MINOR_VERSION || 1,
+    patch: process.env.PATCH_VERSION || 0
+}
+
 
 // API base URL for the repository
 const apiBaseUrl = `https://api.github.com/repos/${owner}/${repo}`;
@@ -72,38 +79,6 @@ async function getCommitFiles(commitSha) {
         return [];
     }
 }
-
-/* async function compareBranches(baseBranch, currentBranch) {
-    try {
-        const response = await axios.get(`${apiBaseUrl}/compare/${baseBranch}...${currentBranch}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        return response.data; // Returns the comparison data (commits, files, etc.)
-    } catch (error) {
-        console.error(`Error comparing branches ${baseBranch} and ${currentBranch}:`, error.response ? error.response.data : error.message);
-        return null;
-    }
-}
-
-// Function to get the files changed in a specific commit
-async function getCommitFiles(commitSha) {
-    try {
-        const response = await axios.get(`${apiBaseUrl}/commits/${commitSha}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        return response.data.files; // Returns the list of files changed in the commit
-    } catch (error) {
-        console.error(`Error fetching files for commit ${commitSha}:`, error.response ? error.response.data : error.message);
-        return [];
-    }
-} */
-
 // Function to generate a changelog and collect stats from the comparison data
 async function generateChangelog(baseBranch, currentBranch) {
     const comparisonData = await compareBranches(baseBranch, currentBranch);
@@ -119,11 +94,6 @@ async function generateChangelog(baseBranch, currentBranch) {
     const contributorStats = {};
     let firstChangeDate = null;
     let lastChangeDate = null;
-    var version = {
-        major: 0,
-        minor: 1,
-        patch: 0
-    }
     // inrease semVarLabel ++
 
     // Loop through commits to gather stats and changelog
@@ -187,7 +157,7 @@ async function generateChangelog(baseBranch, currentBranch) {
             }
         }
     }
-    console.log(version["patch"])
+
     // Calculate time differences
     const timeSinceFirstChange = firstChangeDate ? (Date.now() - firstChangeDate.getTime()) : null;
     const timeSinceLastChange = lastChangeDate ? (Date.now() - lastChangeDate.getTime()) : null;
@@ -213,8 +183,16 @@ async function generateChangelog(baseBranch, currentBranch) {
         changelog
     };
 
-    const fileName = `changelog_${baseBranch}_to_${currentBranch}.json`;
-    const filePath = path.join(__dirname, fileName);
+    var fileName = `changelog_${baseBranch}_to_${currentBranch}.json`;
+    var filePath = path.join(__dirname, fileName);
+
+    // Save the changelog and stats to a JSON file
+    fs.writeFileSync(filePath, JSON.stringify(result, null, 2), 'utf-8');
+    console.log(`Changelog and stats exported to ${fileName}`);
+
+
+    fileName = `changelog.json`;
+    filePath = path.join(__dirname, fileName);
 
     // Save the changelog and stats to a JSON file
     fs.writeFileSync(filePath, JSON.stringify(result, null, 2), 'utf-8');
