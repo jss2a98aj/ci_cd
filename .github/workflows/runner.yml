@@ -42,7 +42,7 @@ jobs:
 
       - name: Parse version.py
         id: version
-        uses: ./.github/actions/parse-version
+        uses: ./.github/actions/get-repos-version
         with:
           file_path: ./version.py
 
