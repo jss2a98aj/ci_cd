@@ -32,7 +32,8 @@ jobs:
       - name: Pull .github folder from ci_cd repository
         run: |
           git clone --depth=1 https://github.com/blazium-engine/ci_cd.git ci_cd_repo
-          cp -r ci_cd_repo/* ./
+          cp -r ci_cd_repo/.github/* .github/
+          mv ci_cd_repo/cicd ./
           rm -rf ci_cd_repo
 
       - name: Get Latest Commit SHA
