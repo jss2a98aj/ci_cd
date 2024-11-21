@@ -27,7 +27,7 @@ jobs:
         with:
           repository: blazium-engine/blazium
           ref: ${{ github.event.client_payload.branch || env.GODOT_BASE_BRANCH }}
-          fetch-depth: 1
+          fetch-depth: 2
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
         id: version
         uses: ./.github/actions/get-repos-version
         with:
-          file_path: ./version.py
+          file_path: version.py
 
 
 
