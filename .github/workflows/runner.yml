@@ -63,8 +63,8 @@ jobs:
           else
             echo "Folder does not exist" >> $GITHUB_STEP_SUMMARY
           fi
-          node ./cicd/scripts/changelog.js
-          cat ./changelog.json
+          node ./cicd/scripts/changelog.js $(pwd)
+          cat $(pwd)/changelog.json
 
 
 

@@ -27,7 +27,7 @@ function httpsGet(url, headers = {}) {
             headers: {
                 'Authorization': `token ${token}`,
                 'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'Node.js',
+                'User-Agent': 'blazium-engine/blazium ci/cd v0.0.1 prototype',
                 ...headers,
             },
         };
@@ -80,7 +80,7 @@ async function getCommitFiles(commitSha) {
     }
 }
 // Function to generate a changelog and collect stats from the comparison data
-async function generateChangelog(baseBranch, currentBranch) {
+async function generateChangelog(baseBranch, currentBranch, outputDir = __dirname) {
     const comparisonData = await compareBranches(baseBranch, currentBranch);
 
     if (!comparisonData) {
@@ -94,7 +94,7 @@ async function generateChangelog(baseBranch, currentBranch) {
     const contributorStats = {};
     let firstChangeDate = null;
     let lastChangeDate = null;
-    // inrease semVarLabel ++
+    let version = { major: 0, minor: 0, patch: 0 };
 
     // Loop through commits to gather stats and changelog
     for (const commit of commits) {
@@ -102,9 +102,8 @@ async function generateChangelog(baseBranch, currentBranch) {
         const commitMessage = commit.commit.message;
         const commitDate = new Date(commit.commit.committer.date);
         const commitUser = commit.committer.login; // The username of the person who made the commit
-        const prNumber = extractPRNumberFromCommitMessage(commitMessage); // getSemVerLabel
-        const semVerLabel = getSemVerLabel(commitMessage); // getSemVerLabel
-        //console.log(semVerLabel)
+        const prNumber = extractPRNumberFromCommitMessage(commitMessage);
+        const semVerLabel = getSemVerLabel(commitMessage);
 
         // Get files changed in the commit
         const commitFiles = await getCommitFiles(commitSha);
@@ -129,31 +128,28 @@ async function generateChangelog(baseBranch, currentBranch) {
         contributorStats[commitUser].commits.push(commitSha);
 
         // Add to changelog
-        if (!prNumber) {
-            changelog.push({
-                sha: commitSha,
-                message: commitMessage,
-                date: commitDate,
-                user: commitUser,
-                pr: prNumber ? `PR #${prNumber}` : null,
-                label: semVerLabel
-            });
-        } 
+        changelog.push({
+            sha: commitSha,
+            message: commitMessage,
+            date: commitDate,
+            user: commitUser,
+            pr: prNumber ? `PR #${prNumber}` : null,
+            label: semVerLabel
+        });
 
         // Count PRs
         if (prNumber) {
             totalPRs++;
         } else {
-            if (semVerLabel == "major") {
-                version[semVerLabel] = version[semVerLabel]++;
-                version["minor"] = 0;
-                version["patch"] = 0;
-            } else if (semVerLabel == "minor") {
-                version[semVerLabel] = version[semVerLabel]++;
-                version["patch"] = 0;
+            if (semVerLabel === "major") {
+                version.major++;
+                version.minor = 0;
+                version.patch = 0;
+            } else if (semVerLabel === "minor") {
+                version.minor++;
+                version.patch = 0;
             } else {
-                version[semVerLabel] = version[semVerLabel] + 1;
-                //console.log(version[semVerLabel])
+                version.patch++;
             }
         }
     }
@@ -168,7 +164,7 @@ async function generateChangelog(baseBranch, currentBranch) {
         contributions: contributorStats[user].count
     }));
 
-    // Export data to JSON file
+    // Prepare the result object
     const result = {
         baseBranch,
         version,
@@ -183,20 +179,15 @@ async function generateChangelog(baseBranch, currentBranch) {
         changelog
     };
 
-    var fileName = `changelog_${baseBranch}_to_${currentBranch}.json`;
-    var filePath = path.join(__dirname, fileName);
+    // Save the result
+    saveToFile(result, `changelog_${baseBranch}_to_${currentBranch}.json`, outputDir);
+    saveToFile(result, `changelog.json`, outputDir);
+}
 
-    // Save the changelog and stats to a JSON file
-    fs.writeFileSync(filePath, JSON.stringify(result, null, 2), 'utf-8');
-    console.log(`Changelog and stats exported to ${fileName}`);
-
-
-    fileName = `changelog.json`;
-    filePath = path.join(__dirname, fileName);
-
-    // Save the changelog and stats to a JSON file
-    fs.writeFileSync(filePath, JSON.stringify(result, null, 2), 'utf-8');
-    console.log(`Changelog and stats exported to ${fileName}`);
+function saveToFile(data, fileName, outputDir) {
+    const filePath = path.join(outputDir, fileName);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    console.log(`Changelog and stats exported to ${filePath}`);
 }
 
 // Function to extract PR numbers from a commit message (e.g., "Merge pull request #XYZ")
@@ -228,5 +219,7 @@ function getSemVerLabel(message) {
 
 // Main function
 (async function main() {
-    await generateChangelog(baseBranch, currentBranch);
+    const args = process.argv.slice(2);
+    const outputDir = args[0] || __dirname;
+    await generateChangelog(baseBranch, currentBranch, outputDir);
 })();
