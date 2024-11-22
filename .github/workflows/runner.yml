@@ -68,6 +68,20 @@ jobs:
         uses: ./.github/actions/version-from-changelog
         with:
           file_path: ${{ github.workspace }}/changelog.json
+
+      - name: Update new Version Information to version.py
+        id: new_version
+        uses: ./.github/actions/version-from-changelog
+        with:
+          file_path: ${{ github.workspace }}/version.py
+          external_major: ${{ steps.new_version.outputs.major }}
+          external_minor: ${{ steps.new_version.outputs.minor }}
+          external_patch: ${{ steps.new_version.outputs.patch }}
+          external_status: ${{ github.event.client_payload.type || 'nightly' }}
+          external_sha: ${{ steps.get_sha.outputs.sha }}
+
+      - name: Did it Write?
+        run: cat $GITHUB_WORKSPACE/version.py
           
 
 
