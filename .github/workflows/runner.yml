@@ -70,8 +70,7 @@ jobs:
           file_path: ${{ github.workspace }}/changelog.json
 
       - name: Update new Version Information to version.py
-        id: new_version
-        uses: ./.github/actions/version-from-changelog
+        uses: ./.github/actions/set-repos-version
         with:
           file_path: ${{ github.workspace }}/version.py
           external_major: ${{ steps.new_version.outputs.major }}
