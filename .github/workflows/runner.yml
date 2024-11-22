@@ -59,6 +59,7 @@ jobs:
         run: |
           node ./cicd/scripts/changelog.js $(pwd)
           cat $(pwd)/changelog.json
+          jq -v
 
 
 
