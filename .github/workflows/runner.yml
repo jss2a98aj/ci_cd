@@ -21,6 +21,10 @@ jobs:
       external_patch: ${{ steps.version.outputs.external_patch }}
       external_status: ${{ steps.version.outputs.external_status }}
       external_sha: ${{ steps.version.outputs.external_sha }}
+      new_major: ${{ steps.new_version.outputs.major }}
+      new_minor: ${{ steps.new_version.outputs.minor }}
+      new_patch: ${{ steps.new_version.outputs.patch }}
+      new_version: ${{ steps.new_version.outputs.version_string }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,8 +62,13 @@ jobs:
           PATCH_VERSION: ${{ steps.version.outputs.external_patch }}
         run: |
           node ./cicd/scripts/changelog.js $(pwd)
-          cat $(pwd)/changelog.json
-          jq -v
+
+      - name: Get Verson of Changelog
+        id: new_version
+        uses: ./.github/actions/version-from-changelog
+        with:
+          file_path: ${{ github.workspace }}/changelog.json
+          
 
 
 

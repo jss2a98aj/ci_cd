@@ -1,0 +1,78 @@
+name: Parse Changelog Version
+description: Parses a changelog.json file to extract version information and outputs it as individual components and a combined string.
+
+inputs:
+  file_path:
+    description: Path to the changelog.json file
+    required: true
+
+outputs:
+  version_string:
+    description: Combined version string in the format X.X.X
+    value: ${{ steps.parse-version.outputs.version_string }}
+  major:
+    description: Major version component
+    value: ${{ steps.parse-version.outputs.major }}
+  minor:
+    description: Minor version component
+    value: ${{ steps.parse-version.outputs.minor }}
+  patch:
+    description: Patch version component
+    value: ${{ steps.parse-version.outputs.patch }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate changelog.json existence
+      id: validate-file
+      shell: bash
+      run: |
+        FILE_PATH="${{ inputs.file_path }}"
+
+        # Validate the file exists
+        if [ ! -f "$FILE_PATH" ]; then
+          echo "Error: File $FILE_PATH does not exist." >> $GITHUB_STEP_SUMMARY
+          echo "Debug: Current working directory: $(pwd)"
+          echo "Debug: Files in directory: $(ls -l)"
+          exit 1
+        fi
+
+        echo "Debug: Found changelog.json at $FILE_PATH" >> $GITHUB_STEP_SUMMARY
+
+    - name: Parse version information
+      id: parse-version
+      shell: bash
+      run: |
+        FILE_PATH="${{ inputs.file_path }}"
+
+        # Extract version information using jq
+        major=$(jq -r '.version.major' "$FILE_PATH")
+        minor=$(jq -r '.version.minor' "$FILE_PATH")
+        patch=$(jq -r '.version.patch' "$FILE_PATH")
+
+        # Validate that version components were extracted
+        if [ -z "$major" ] || [ -z "$minor" ] || [ -z "$patch" ]; then
+          echo "Error: Failed to extract version information from $FILE_PATH." >> $GITHUB_STEP_SUMMARY
+          echo "Debug: jq output for major: $major, minor: $minor, patch: $patch"
+          exit 1
+        fi
+
+        # Combine into a single string
+        version_string="${major}.${minor}.${patch}"
+
+        # Log debug information
+        echo "Debug: Extracted Major: $major, Minor: $minor, Patch: $patch" >> $GITHUB_STEP_SUMMARY
+        echo "Debug: Combined Version String: $version_string" >> $GITHUB_STEP_SUMMARY
+
+        # Write to GitHub Summary
+        echo "### Version Information Extracted" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version String**: $version_string" >> $GITHUB_STEP_SUMMARY
+        echo "- **Major**: $major" >> $GITHUB_STEP_SUMMARY
+        echo "- **Minor**: $minor" >> $GITHUB_STEP_SUMMARY
+        echo "- **Patch**: $patch" >> $GITHUB_STEP_SUMMARY
+
+        # Set outputs for the action
+        echo "version_string=$version_string" >> $GITHUB_OUTPUT
+        echo "major=$major" >> $GITHUB_OUTPUT
+        echo "minor=$minor" >> $GITHUB_OUTPUT
+        echo "patch=$patch" >> $GITHUB_OUTPUT
