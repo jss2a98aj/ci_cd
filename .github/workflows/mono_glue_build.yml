@@ -223,7 +223,7 @@ jobs:
             #echo "Verifying $pkg for Signing"
             #dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT -v diag
             echo "Pushing $pkg to NuGet.org..."
-            dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate --skip-signing
+            dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate
           done
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
