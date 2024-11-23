@@ -204,29 +204,13 @@ jobs:
           source: ${{ env.DEPLOY_TYPE }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
           out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}
 
-      - name: Decode Base64-encoded secret and create cer file
-        run: |
-          echo "$NUGET_DER_FILE" | base64 --decode > cert-der.cer
-
-      - name: Decode Base64-encoded secret and create crt file
-        run: |
-          echo "$NUGET_CRT" | base64 --decode > cert.crt
-        env:
-          NUGET_CRT: ${{ secrets.NUGET_CRT }}
-
-      - name: Verify the certificate file
-        run: |
-          file cert-der.cer
-          ls -l cert-der.cer
-          cat cert.crt >> /usr/share/dotnet/sdk/8.0.404/trustedroots/codesignctl.pem
-
       - name: Push to NuGet
         run: |
           for pkg in ./nupkgs/*.nupkg; do
-            echo "Signing $pkg"
-            dotnet nuget sign "$pkg" --certificate-path "$CERT_PATH"  --certificate-password "" --timestamper "http://ts.ssl.com" -v diag
-            echo "Verifying $pkg for Signing"
-            dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT -v diag
+            #echo "Signing $pkg"
+            #dotnet nuget sign "$pkg" --certificate-path "$CERT_PATH"  --certificate-password "" --timestamper "http://ts.ssl.com" -v diag
+            #echo "Verifying $pkg for Signing"
+            #dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT -v diag
             echo "Pushing $pkg to NuGet.org..."
             dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY"  --skip-duplicate
           done
