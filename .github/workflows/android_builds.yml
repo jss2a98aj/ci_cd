@@ -65,6 +65,7 @@ jobs:
           fetch-depth: 1
 
       - name: Compilation
+        if: ${{ github.event.client_payload.force != true }}
         id: compile
         uses: ./.github/actions/version-checker
         with:
@@ -88,6 +89,7 @@ jobs:
           fetch-depth: 1
 
       - name: Compilation
+        if: ${{ github.event.client_payload.force != true }}
         id: compile
         uses: ./.github/actions/version-checker
         with:
