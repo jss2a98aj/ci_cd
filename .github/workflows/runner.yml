@@ -69,9 +69,6 @@ jobs:
         with:
           file_path: ${{ github.workspace }}/changelog.json
 
-      - name: blah
-        run: echo "${{ steps.new_version.outputs.major }}" >> $GITHUB_OUTPUT
-
 
   static-checks:
     name: 📊 Static checks
