@@ -10,6 +10,22 @@ on:
         description: "Runner ID of the Parent Runner"
         required: true
         type: string
+      new_major:
+        description: "New Major # for Version"
+        required: true
+        type: string
+      new_minor:
+        description: "New Minor # for Version"
+        required: true
+        type: string
+      new_patch:
+        description: "New Patch # for Version"
+        required: true
+        type: string
+      new_version:
+        description: "New Version that'll be Deployed"
+        required: true
+        type: string
 
 # Global Settings
 env:
@@ -113,6 +129,16 @@ jobs:
           cp -r ci_cd_repo/.github/* .github/
           rm -rf ci_cd_repo
 
+      - name: Update new Version Information to version.py
+        uses: ./.github/actions/set-repos-version
+        with:
+          file_path: ${{ github.workspace }}/version.py
+          external_major: ${{ inputs.new_major }}
+          external_minor: ${{ inputs.new_minor }}
+          external_patch: ${{ inputs.new_patch }}
+          external_status: ${{ github.event.client_payload.type || 'nightly' }}
+          external_sha: ${{ inputs.build_sha }}
+
       - name: Notify Cerebro of Build Starting
         uses: ./.github/actions/cerebro-started
         with:
@@ -127,6 +153,7 @@ jobs:
           build_os: macos
           checksum: ${{ inputs.build_sha }}
           production: ${{ github.event.client_payload.production }}
+          version: ${{ inputs.new_version }}
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
@@ -283,7 +310,7 @@ jobs:
           name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
           run_id: ${{ inputs.runner_id }}
           file_url: ${{ secrets.CDN_URL }}/${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          version: ""
+          version: ${{ inputs.new_version }}
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 
@@ -356,6 +383,16 @@ jobs:
           cp -r ci_cd_repo/.github/* .github/
           rm -rf ci_cd_repo
 
+      - name: Update new Version Information to version.py
+        uses: ./.github/actions/set-repos-version
+        with:
+          file_path: ${{ github.workspace }}/version.py
+          external_major: ${{ inputs.new_major }}
+          external_minor: ${{ inputs.new_minor }}
+          external_patch: ${{ inputs.new_patch }}
+          external_status: ${{ github.event.client_payload.type || 'nightly' }}
+          external_sha: ${{ inputs.build_sha }}
+
       - name: Notify Cerebro of Build Starting
         uses: ./.github/actions/cerebro-started
         with:
@@ -370,6 +407,7 @@ jobs:
           build_os: macos
           checksum: ${{ inputs.build_sha }}
           production: ${{ github.event.client_payload.production }}
+          version: ${{ inputs.new_version }}
 
 
       - name: Restore Godot build cache
@@ -521,7 +559,7 @@ jobs:
           name: ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}
           run_id: ${{ inputs.runner_id }}
           file_url: ${{ secrets.CDN_URL }}/${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}${{ startsWith(matrix.target, 'template_') && '/template' || '' }}/${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          version: ""
+          version: ${{ inputs.new_version }}
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 

@@ -10,6 +10,23 @@ on:
         description: "Runner ID of the Parent Runner"
         required: true
         type: string
+      new_major:
+        description: "New Major # for Version"
+        required: true
+        type: string
+      new_minor:
+        description: "New Minor # for Version"
+        required: true
+        type: string
+      new_patch:
+        description: "New Patch # for Version"
+        required: true
+        type: string
+      new_version:
+        description: "New Version that'll be Deployed"
+        required: true
+        type: string
+
 # Global Settings
 env:
   # Used for the cache key. Add version suffix to force clean build.
@@ -74,6 +91,17 @@ jobs:
           cp -r ci_cd_repo/.github/* .github/
           rm -rf ci_cd_repo
 
+      - name: Update new Version Information to version.py
+        uses: ./.github/actions/set-repos-version
+        with:
+          file_path: ${{ github.workspace }}/version.py
+          external_major: ${{ steps.new_version.outputs.major }}
+          external_minor: ${{ steps.new_version.outputs.minor }}
+          external_patch: ${{ steps.new_version.outputs.patch }}
+          external_status: ${{ github.event.client_payload.type || 'nightly' }}
+          external_sha: ${{ steps.get_sha.outputs.sha }}
+
+
       # Install Linux dependencies for tests
       - name: Linux dependencies for tests
         run: |
@@ -120,6 +148,7 @@ jobs:
           build_os: linux
           checksum: ${{ inputs.build_sha }}
           production: ${{ github.event.client_payload.production }}
+          version: ${{ inputs.new_version }}
 
       - name: Compilation
         uses: ./.github/actions/godot-build
@@ -208,7 +237,7 @@ jobs:
           name: ${{ env.DEPLOY_TYPE }}-${{ github.event.client_payload.type || 'nightly' }}
           run_id: ${{ inputs.runner_id }}
           file_url: ${{ secrets.CDN_URL }}/${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/${{ env.DEPLOY_TYPE }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
-          version: ""
+          version: ${{ inputs.new_version }}
           cerebro_url: ${{ secrets.CEREBRO_URL }}
           cerebro_auth: ${{ secrets.BLAZIUM_AUTH }}
 

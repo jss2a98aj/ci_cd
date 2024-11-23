@@ -50,7 +50,7 @@ jobs:
         with:
           file_path: version.py
 
-      - name: Does Node.js Exist?
+      - name: Generate Changelog.json
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_OWNER: blazium-engine
@@ -69,21 +69,6 @@ jobs:
         with:
           file_path: ${{ github.workspace }}/changelog.json
 
-      - name: Update new Version Information to version.py
-        uses: ./.github/actions/set-repos-version
-        with:
-          file_path: ${{ github.workspace }}/version.py
-          external_major: ${{ steps.new_version.outputs.major }}
-          external_minor: ${{ steps.new_version.outputs.minor }}
-          external_patch: ${{ steps.new_version.outputs.patch }}
-          external_status: ${{ github.event.client_payload.type || 'nightly' }}
-          external_sha: ${{ steps.get_sha.outputs.sha }}
-
-      - name: Did it Write?
-        run: cat $GITHUB_WORKSPACE/version.py
-          
-
-
 
   static-checks:
     name: 📊 Static checks
@@ -93,6 +78,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   web-build:
     name: 🌐 Web
@@ -103,6 +92,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   monoglue-build:
     name: Mono Glue
@@ -113,6 +106,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   android-build:
     name: 🤖 Android
@@ -123,6 +120,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   ios-build:
     name: 🍏 iOS
@@ -133,6 +134,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   linux-build:
     name: 🐧 Linux
@@ -143,6 +148,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   macos-build:
     name: 🍎 macOS
@@ -153,6 +162,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   windows-build:
     name: 🏁 Windows
@@ -163,6 +176,10 @@ jobs:
     with:
       build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
       runner_id: ${{ github.run_id }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
   deploy:
     name: Deploy
@@ -179,6 +196,10 @@ jobs:
       linux-build: ${{ needs.linux-build.result }}
       android-build: ${{ needs.android-build.result }}
       ios-build: ${{ needs.ios-build.result }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
 
 
   cleanup:
@@ -196,3 +217,7 @@ jobs:
       linux-build: ${{ needs.linux-build.result }}
       android-build: ${{ needs.android-build.result }}
       ios-build: ${{ needs.ios-build.result }}
+      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
