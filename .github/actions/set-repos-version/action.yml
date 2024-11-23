@@ -52,12 +52,19 @@ runs:
         echo "- **External Status**: ${{ inputs.external_status }}" >> $GITHUB_STEP_SUMMARY
         echo "- **External SHA**: ${{ inputs.external_sha }}" >> $GITHUB_STEP_SUMMARY
 
+        # Determine OS and set sed command
+        if [[ "$OSTYPE" == "darwin"* || "$OSTYPE" == "*bsd"* ]]; then
+          SED_CMD="sed -i ''"
+        else
+          SED_CMD="sed -i"
+        fi
+
         # Update the file using sed
-        sed -i "s/^external_major = .*/external_major = ${{ inputs.external_major }}/" "${{ inputs.file_path }}"
-        sed -i "s/^external_minor = .*/external_minor = ${{ inputs.external_minor }}/" "${{ inputs.file_path }}"
-        sed -i "s/^external_patch = .*/external_patch = ${{ inputs.external_patch }}/" "${{ inputs.file_path }}"
-        sed -i "s/^external_status = .*/external_status = \"${{ inputs.external_status }}\"/" "${{ inputs.file_path }}"
-        sed -i "s/^external_sha = .*/external_sha = \"${{ inputs.external_sha }}\"/" "${{ inputs.file_path }}"
+        $SED_CMD "s/^external_major = .*/external_major = ${{ inputs.external_major }}/" "${{ inputs.file_path }}"
+        $SED_CMD "s/^external_minor = .*/external_minor = ${{ inputs.external_minor }}/" "${{ inputs.file_path }}"
+        $SED_CMD "s/^external_patch = .*/external_patch = ${{ inputs.external_patch }}/" "${{ inputs.file_path }}"
+        $SED_CMD "s/^external_status = .*/external_status = \"${{ inputs.external_status }}\"/" "${{ inputs.file_path }}"
+        $SED_CMD "s/^external_sha = .*/external_sha = \"${{ inputs.external_sha }}\"/" "${{ inputs.file_path }}"
 
         # Validate the updates
         if grep -q "^external_major = ${{ inputs.external_major }}" "${{ inputs.file_path }}" &&
