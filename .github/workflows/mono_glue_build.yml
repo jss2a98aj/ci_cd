@@ -95,9 +95,9 @@ jobs:
         uses: ./.github/actions/set-repos-version
         with:
           file_path: ${{ github.workspace }}/version.py
-          external_major: ${{ inputs.major }}
-          external_minor: ${{ inputs.minor }}
-          external_patch: ${{ inputs.patch }}
+          external_major: ${{ inputs.new_major }}
+          external_minor: ${{ inputs.new_minor }}
+          external_patch: ${{ inputs.new_patch }}
           external_status: ${{ github.event.client_payload.type || 'nightly' }}
           external_sha: ${{ inputs.build_sha }}
 
