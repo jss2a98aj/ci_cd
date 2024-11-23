@@ -204,18 +204,26 @@ jobs:
           source: ${{ env.DEPLOY_TYPE }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz
           out_dir: ${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}
 
+      - name: Decode Base64-encoded secret and create cert file
+        run: |
+          echo "$NUGET_DER_FILE" | base64 --decode > cert-der.cer
+        env:
+          NUGET_DER_FILE: ${{ secrets.NUGET_DER_FILE }}
+
       - name: Push to NuGet
         run: |
           for pkg in ./nupkgs/*.nupkg; do
-          # for pkg in ./nupkgs_signed/*.nupkg; do
-          #   echo "Verifying $pkg for Signing"
-          #   dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT
+            echo "Signing $pkg"
+            dotnet nuget sign MyPackage.nupkg --certificate-path $CERT_PATH --timestamper "http://ts.ssl.com"
+            echo "Verifying $pkg for Signing"
+            dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT
             echo "Pushing $pkg to NuGet.org..."
             dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate
           done
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
           NUGET_CERT_FINGERPRINT: ${{ secrets.NUGET_CERT_FINGERPRINT }}
+          CERT_PATH: ${{ github.workspace }}/cert-der.cer
 
       - name: Create build.sha for Version Verification Later
         run: |
