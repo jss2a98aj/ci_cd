@@ -109,7 +109,7 @@ jobs:
 
   android-build:
     name: 🤖 Android
-    needs: [monoglue-build]
+    needs: [monoglue-build, get-latest-sha]
     if: contains(github.event.client_payload.build, 'android')
     uses: ./.github/workflows/android_builds.yml
     secrets: inherit
@@ -123,7 +123,7 @@ jobs:
 
   ios-build:
     name: 🍏 iOS
-    needs: [monoglue-build]
+    needs: [monoglue-build, get-latest-sha]
     if: contains(github.event.client_payload.build, 'ios')
     uses: ./.github/workflows/ios_builds.yml
     secrets: inherit
@@ -137,7 +137,7 @@ jobs:
 
   linux-build:
     name: 🐧 Linux
-    needs: [monoglue-build]
+    needs: [monoglue-build, get-latest-sha]
     if: contains(github.event.client_payload.build, 'linux')
     uses: ./.github/workflows/linux_builds.yml
     secrets: inherit
@@ -151,7 +151,7 @@ jobs:
 
   macos-build:
     name: 🍎 macOS
-    needs: [monoglue-build]
+    needs: [monoglue-build, get-latest-sha]
     if: contains(github.event.client_payload.build, 'macos')
     uses: ./.github/workflows/macos_builds.yml
     secrets: inherit
@@ -165,7 +165,7 @@ jobs:
 
   windows-build:
     name: 🏁 Windows
-    needs: [monoglue-build]
+    needs: [monoglue-build, get-latest-sha]
     if: contains(github.event.client_payload.build, 'windows')
     uses: ./.github/workflows/windows_builds.yml
     secrets: inherit
@@ -179,7 +179,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build, get-latest-sha]
     if: always()
     uses: ./.github/workflows/deploy_all.yml
     secrets: inherit
@@ -200,7 +200,7 @@ jobs:
 
   cleanup:
     name: Clean Up
-    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build, get-latest-sha]
     if: always() && (failure() || cancelled())
     uses: ./.github/workflows/clean_up.yml
     secrets: inherit
