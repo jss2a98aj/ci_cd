@@ -192,7 +192,7 @@ jobs:
           sudo apt-get update
 
           sudo apt-get install -y --no-install-recommends \
-            bash bzip2 curl file python3-full gettext wget \
+            bash bzip2 curl file gettext wget \
             git make nano patch scons pkg-config unzip xz-utils cmake gdb
 
           # Install required packages
