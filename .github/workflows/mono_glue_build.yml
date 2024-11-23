@@ -214,7 +214,7 @@ jobs:
         run: |
           for pkg in ./nupkgs/*.nupkg; do
             echo "Signing $pkg"
-            dotnet nuget sign MyPackage.nupkg --certificate-path $CERT_PATH --timestamper "http://ts.ssl.com"
+            dotnet nuget sign "$pkg" --certificate-path $CERT_PATH --timestamper "http://ts.ssl.com"
             echo "Verifying $pkg for Signing"
             dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT
             echo "Pushing $pkg to NuGet.org..."
