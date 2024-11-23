@@ -98,6 +98,7 @@ jobs:
     needs: editor-check
     if: ${{ needs.editor-check.outputs.compile == 'true' }}
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         include:
@@ -105,25 +106,25 @@ jobs:
           - name: Editor (target=editor)
             cache-name: linux-editor-64bit
             target: editor
-            sconsflags: arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: false
 
           - name: Editor w/ Mono (target=editor)
             cache-name: linux-editor-mono-64bit
             target: editor
-            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
             
           - name: Editor (target=editor)
             cache-name: linux-editor-32bit
             target: editor
-            sconsflags: arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: false
 
           - name: Editor w/ Mono (target=editor)
             cache-name: linux-editor-mono-32bit
             target: editor
-            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
 
     steps:
@@ -348,49 +349,49 @@ jobs:
           - name: Template w/ Mono (target=template_release)
             cache-name: linux-template-mono-64bit
             target: template_release
-            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
 
           - name: Template (target=template_release)
             cache-name: linux-template-64bit
             target: template_release
-            sconsflags: arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: false
 
           - name: Template w/ Mono (target=template_debug)
             cache-name: linux-debug-template-mono-64bit
             target: template_debug
-            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: module_mono_enabled=yes arch=x86_64  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
 
           - name: Template (target=template_debug)
             cache-name: linux-debug-template-64bit
             target: template_debug
-            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: arch=x86_64 ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: false
 
           - name: Template w/ Mono (target=template_release)
             cache-name: linux-template-mono-32bit
             target: template_release
-            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
 
           - name: Template (target=template_release)
             cache-name: linux-template-32bit
             target: template_release
-            sconsflags: arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: false
 
           - name: Template w/ Mono (target=template_debug)
             cache-name: linux-debug-template-mono-32bit
             target: template_debug
-            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: module_mono_enabled=yes arch=x86_32  ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
 
           - name: Template (target=template_debug)
             cache-name: linux-debug-template-32bit
             target: template_debug
-            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || 'dev_build=yes' }}
+            sconsflags: arch=x86_32 ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: false
 
     steps:
