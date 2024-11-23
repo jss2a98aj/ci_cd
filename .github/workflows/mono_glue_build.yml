@@ -210,6 +210,11 @@ jobs:
         env:
           NUGET_DER_FILE: ${{ secrets.NUGET_DER_FILE }}
 
+      - name: Verify the certificate file
+        run: |
+          file cert-der.cer
+          ls -l cert-der.cer
+
       - name: Push to NuGet
         run: |
           for pkg in ./nupkgs/*.nupkg; do
