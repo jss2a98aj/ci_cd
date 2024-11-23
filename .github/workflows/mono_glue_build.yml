@@ -99,7 +99,7 @@ jobs:
           external_minor: ${{ steps.new_version.outputs.minor }}
           external_patch: ${{ steps.new_version.outputs.patch }}
           external_status: ${{ github.event.client_payload.type || 'nightly' }}
-          external_sha: ${{ steps.get_sha.outputs.sha }}
+          external_sha: ${{ inputs.build_sha }}
 
 
       # Install Linux dependencies for tests
