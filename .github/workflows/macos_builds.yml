@@ -364,7 +364,7 @@ jobs:
             cache-name: macos-template-mono
             target: template_release
             mono: true
-            sconsflags: debug_symbols=no ${{ github.event.client_payload.production && 'production=yes' || '' }}
+            sconsflags: debug_symbols=no module_mono_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || '' }}
 
     steps:
       - name: Checkout Repository
@@ -498,53 +498,39 @@ jobs:
           fi
 
           # Create universal binary
-          lipo -create ./bin/blazium.macos.${{ matrix.target }}.x86_64${MONO_SUFFIX} ./bin/blazium.macos.${{ matrix.target }}.arm64${MONO_SUFFIX} -output ./bin/blazium.macos.${{ matrix.target }}.universal${MONO_SUFFIX}
-
-          # Run Mono-specific build script if matrix.mono is true
-          if [ "${{ matrix.mono }}" == "true" ]; then
-            ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=macos
-          fi
+          lipo -create ./bin/blazium.macos.template_release.x86_64${MONO_SUFFIX} ./bin/blazium.macos.template_release.arm64${MONO_SUFFIX} -output ./bin/blazium.macos.template_release.universal${MONO_SUFFIX}
+          lipo -create ./bin/blazium.macos.template_debug.x86_64${MONO_SUFFIX} ./bin/blazium.macos.template_debug.arm64${MONO_SUFFIX} -output ./bin/blazium.macos.template_debug.universal${MONO_SUFFIX}
 
           # Remove original binaries and strip the universal binary
-          rm ./bin/blazium.macos.${{ matrix.target }}.x86_64${MONO_SUFFIX} ./bin/blazium.macos.${{ matrix.target }}.arm64${MONO_SUFFIX}
+          rm ./bin/blazium.macos.template_release.x86_64${MONO_SUFFIX} ./bin/blazium.macos.template_release.arm64${MONO_SUFFIX} 
+          rm ./bin/blazium.macos.template_debug.x86_64${MONO_SUFFIX} ./bin/blazium.macos.template_debug.arm64${MONO_SUFFIX}
           strip bin/blazium.*
           chmod +x bin/blazium.*
 
       - name: Package Editor
         run: |
           MONO_SUFFIX=""
-          ENTITLEMENTS_FILE="misc/dist/macos/editor_debug.entitlements"
           
           # Set suffix for Mono if enabled
           if [ "${{ matrix.mono }}" == "true" ]; then
             MONO_SUFFIX="_mono"
           fi
 
-          # Determine the entitlements file based on production flag
-          if [ "${{ github.event.client_payload.production }}" == "true" ]; then
-            ENTITLEMENTS_FILE="misc/dist/macos/editor.entitlements"
-          fi
-
           # Copy macOS application template and binary
           cp -r misc/dist/macos_tools.app ./Blazium${MONO_SUFFIX}.app
-          mkdir -p Blazium${MONO_SUFFIX}.app/Contents/MacOS
-          cp bin/blazium.macos.${{ matrix.target }}.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS/Blazium
-
-          # Copy GodotSharp resources if Mono is enabled
-          if [ "${{ matrix.mono }}" == "true" ]; then
-            cp -rp ./bin/GodotSharp Blazium${MONO_SUFFIX}.app/Contents/Resources/GodotSharp
-          fi
+          mkdir -p Blazium${MONO_SUFFIX}.app/Contents/{MacOS,Resources}
+          cp bin/blazium.macos.template_release.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS
+          cp bin/blazium.macos.template_debug.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS
 
           # Set permissions and sign the application
-          chmod +x Blazium${MONO_SUFFIX}.app/Contents/MacOS/Blazium
-          codesign --force --timestamp --options=runtime --entitlements $ENTITLEMENTS_FILE -s - Blazium${MONO_SUFFIX}.app
+          chmod +x Blazium${MONO_SUFFIX}.app/Contents/MacOS/blazium*
 
           # Package the application into a zip file
-          zip -q -9 -r "Blazium_macos.universal.zip" Blazium${MONO_SUFFIX}.app
+          zip -q -9 -r "Blazium_macos.universal${MONO_SUFFIX}.zip" Blazium${MONO_SUFFIX}.app
       
       - name: Create tar.gz Archive
         run: |
-          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz ./Blazium_macos.universal.zip
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz ./Blazium_macos.universal${MONO_SUFFIX}.zip
 
       - uses: BetaHuhn/do-spaces-action@v2
         with:
