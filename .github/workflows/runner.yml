@@ -70,7 +70,6 @@ jobs:
           file_path: ${{ github.workspace }}/changelog.json
 
       - name: blah
-        id: get_sha
         run: echo "${{ steps.new_version.outputs.major }}" >> $GITHUB_OUTPUT
 
 
