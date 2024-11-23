@@ -219,11 +219,11 @@ jobs:
         run: |
           for pkg in ./nupkgs/*.nupkg; do
             #echo "Signing $pkg"
-            #dotnet nuget sign "$pkg" --certificate-path "$CERT_PATH"  --certificate-password "" --timestamper "http://ts.ssl.com" -v diag
+            dotnet nuget sign "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT  --certificate-password "" -v diag
             #echo "Verifying $pkg for Signing"
-            #dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT -v diag
+            dotnet nuget verify "$pkg" --certificate-fingerprint $NUGET_CERT_FINGERPRINT -v diag
             echo "Pushing $pkg to NuGet.org..."
-            dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY" --skip-duplicate
+            dotnet nuget push "$pkg" --source "nuget.org" --api-key "$NUGET_API_KEY"  --skip-duplicate
           done
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
