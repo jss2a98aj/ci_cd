@@ -218,7 +218,7 @@ jobs:
         run: |
           file cert-der.cer
           ls -l cert-der.cer
-          cat cert.crt >> /usr/lib/dotnet/sdk/8.0.110/trustedroots/codesignctl.pem
+          #cat cert.crt >> /usr/lib/dotnet/sdk/8.0.110/trustedroots/codesignctl.pem
 
       - name: Push to NuGet
         run: |
