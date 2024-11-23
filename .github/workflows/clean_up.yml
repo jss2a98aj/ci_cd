@@ -34,6 +34,22 @@ on:
         description: "Build Status"
         required: true
         type: string
+      new_major:
+        description: "New Major # for Version"
+        required: true
+        type: string
+      new_minor:
+        description: "New Minor # for Version"
+        required: true
+        type: string
+      new_patch:
+        description: "New Patch # for Version"
+        required: true
+        type: string
+      new_version:
+        description: "New Version that'll be Deployed"
+        required: true
+        type: string
         
 # Global Settings
 env:
