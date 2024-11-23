@@ -69,155 +69,159 @@ jobs:
         with:
           file_path: ${{ github.workspace }}/changelog.json
 
-
-  static-checks:
-    name: 📊 Static checks
-    needs: get-latest-sha
-    uses: ./.github/workflows/static_checks.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  web-build:
-    name: 🌐 Web
-    needs: [get-latest-sha, static-checks]
-    if: contains(github.event.client_payload.build, 'web')
-    uses: ./.github/workflows/web_builds.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  monoglue-build:
-    name: Mono Glue
-    needs: [get-latest-sha, static-checks]
-    if: contains(github.event.client_payload.build, 'monoglue')
-    uses: ./.github/workflows/mono_glue_build.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  android-build:
-    name: 🤖 Android
-    needs: [monoglue-build]
-    if: contains(github.event.client_payload.build, 'android')
-    uses: ./.github/workflows/android_builds.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  ios-build:
-    name: 🍏 iOS
-    needs: [monoglue-build]
-    if: contains(github.event.client_payload.build, 'ios')
-    uses: ./.github/workflows/ios_builds.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  linux-build:
-    name: 🐧 Linux
-    needs: [monoglue-build]
-    if: contains(github.event.client_payload.build, 'linux')
-    uses: ./.github/workflows/linux_builds.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  macos-build:
-    name: 🍎 macOS
-    needs: [monoglue-build]
-    if: contains(github.event.client_payload.build, 'macos')
-    uses: ./.github/workflows/macos_builds.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  windows-build:
-    name: 🏁 Windows
-    needs: [monoglue-build]
-    if: contains(github.event.client_payload.build, 'windows')
-    uses: ./.github/workflows/windows_builds.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
-
-  deploy:
-    name: Deploy
-    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
-    if: always()
-    uses: ./.github/workflows/deploy_all.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      monoglue-build: ${{ needs.monoglue-build.result }}
-      windows-build: ${{ needs.windows-build.result }}
-      macos-build: ${{ needs.macos-build.result }}
-      linux-build: ${{ needs.linux-build.result }}
-      android-build: ${{ needs.android-build.result }}
-      ios-build: ${{ needs.ios-build.result }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+      - name: blah
+        id: get_sha
+        run: echo "${{ steps.new_version.outputs.major }}" >> $GITHUB_OUTPUT
 
 
-  cleanup:
-    name: Clean Up
-    needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
-    if: always() && (failure() || cancelled())
-    uses: ./.github/workflows/clean_up.yml
-    secrets: inherit
-    with:
-      build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
-      runner_id: ${{ github.run_id }}
-      monoglue-build: ${{ needs.monoglue-build.result }}
-      windows-build: ${{ needs.windows-build.result }}
-      macos-build: ${{ needs.macos-build.result }}
-      linux-build: ${{ needs.linux-build.result }}
-      android-build: ${{ needs.android-build.result }}
-      ios-build: ${{ needs.ios-build.result }}
-      new_major: ${{ needs.get-latest-sha.outputs.new_major }}
-      new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
-      new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
-      new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+  # static-checks:
+  #   name: 📊 Static checks
+  #   needs: get-latest-sha
+  #   uses: ./.github/workflows/static_checks.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # web-build:
+  #   name: 🌐 Web
+  #   needs: [get-latest-sha, static-checks]
+  #   if: contains(github.event.client_payload.build, 'web')
+  #   uses: ./.github/workflows/web_builds.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # monoglue-build:
+  #   name: Mono Glue
+  #   needs: [get-latest-sha, static-checks]
+  #   if: contains(github.event.client_payload.build, 'monoglue')
+  #   uses: ./.github/workflows/mono_glue_build.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # android-build:
+  #   name: 🤖 Android
+  #   needs: [monoglue-build]
+  #   if: contains(github.event.client_payload.build, 'android')
+  #   uses: ./.github/workflows/android_builds.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # ios-build:
+  #   name: 🍏 iOS
+  #   needs: [monoglue-build]
+  #   if: contains(github.event.client_payload.build, 'ios')
+  #   uses: ./.github/workflows/ios_builds.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # linux-build:
+  #   name: 🐧 Linux
+  #   needs: [monoglue-build]
+  #   if: contains(github.event.client_payload.build, 'linux')
+  #   uses: ./.github/workflows/linux_builds.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # macos-build:
+  #   name: 🍎 macOS
+  #   needs: [monoglue-build]
+  #   if: contains(github.event.client_payload.build, 'macos')
+  #   uses: ./.github/workflows/macos_builds.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # windows-build:
+  #   name: 🏁 Windows
+  #   needs: [monoglue-build]
+  #   if: contains(github.event.client_payload.build, 'windows')
+  #   uses: ./.github/workflows/windows_builds.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+  # deploy:
+  #   name: Deploy
+  #   needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+  #   if: always()
+  #   uses: ./.github/workflows/deploy_all.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     monoglue-build: ${{ needs.monoglue-build.result }}
+  #     windows-build: ${{ needs.windows-build.result }}
+  #     macos-build: ${{ needs.macos-build.result }}
+  #     linux-build: ${{ needs.linux-build.result }}
+  #     android-build: ${{ needs.android-build.result }}
+  #     ios-build: ${{ needs.ios-build.result }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
+
+
+  # cleanup:
+  #   name: Clean Up
+  #   needs: [monoglue-build, windows-build, macos-build, linux-build, android-build, ios-build]
+  #   if: always() && (failure() || cancelled())
+  #   uses: ./.github/workflows/clean_up.yml
+  #   secrets: inherit
+  #   with:
+  #     build_sha: ${{ needs.get-latest-sha.outputs.build_sha }}
+  #     runner_id: ${{ github.run_id }}
+  #     monoglue-build: ${{ needs.monoglue-build.result }}
+  #     windows-build: ${{ needs.windows-build.result }}
+  #     macos-build: ${{ needs.macos-build.result }}
+  #     linux-build: ${{ needs.linux-build.result }}
+  #     android-build: ${{ needs.android-build.result }}
+  #     ios-build: ${{ needs.ios-build.result }}
+  #     new_major: ${{ needs.get-latest-sha.outputs.new_major }}
+  #     new_minor: ${{ needs.get-latest-sha.outputs.new_minor }}
+  #     new_patch: ${{ needs.get-latest-sha.outputs.new_patch }}
+  #     new_version: ${{ needs.get-latest-sha.outputs.new_version }}
