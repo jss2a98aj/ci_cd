@@ -491,6 +491,7 @@ jobs:
 
       - name: Prepare Editor
         run: |
+          ls -la ./bin/
           MONO_SUFFIX=""
           if [ "${{ matrix.mono }}" == "true" ]; then
             MONO_SUFFIX=".mono"
