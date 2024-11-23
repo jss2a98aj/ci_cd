@@ -506,21 +506,24 @@ jobs:
           rm ./bin/blazium.macos.template_debug.x86_64${MONO_SUFFIX} ./bin/blazium.macos.template_debug.arm64${MONO_SUFFIX}
           strip bin/blazium.*
           chmod +x bin/blazium.*
+          ls -la ./bin/
 
       - name: Package Editor
         run: |
           MONO_SUFFIX=""
+          MONO_FSUFFIX=""
           
           # Set suffix for Mono if enabled
           if [ "${{ matrix.mono }}" == "true" ]; then
             MONO_SUFFIX="_mono"
+            MONO_FSUFFIX=".mono"
           fi
 
           # Copy macOS application template and binary
           cp -r misc/dist/macos_tools.app ./Blazium${MONO_SUFFIX}.app
           mkdir -p Blazium${MONO_SUFFIX}.app/Contents/{MacOS,Resources}
-          cp bin/blazium.macos.template_release.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS
-          cp bin/blazium.macos.template_debug.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS
+          cp bin/blazium.macos.template_release.universal${MONO_FSUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS
+          cp bin/blazium.macos.template_debug.universal${MONO_FSUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS
 
           # Set permissions and sign the application
           chmod +x Blazium${MONO_SUFFIX}.app/Contents/MacOS/blazium*
