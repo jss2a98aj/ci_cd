@@ -289,7 +289,7 @@ jobs:
       - name: Upload Packaged Editor artifact
         uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ matrix.cache-name }}
+          name: ${{ matrix.cache-name }}-packed
           path: Blazium_macos.universal.zip
       
       - name: Create tar.gz Archive
