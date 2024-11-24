@@ -95,7 +95,7 @@ jobs:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
     needs: editor-check
-    if: ${{ needs.editor-check.outputs.compile == 'true' }}
+    if: ${{ needs.editor-check.outputs.compile == 'true' || github.event.client_payload.force }}
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -381,7 +381,7 @@ jobs:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
     needs: template-check
-    if: ${{ needs.template-check.outputs.compile == 'true' }}
+    if: ${{ needs.template-check.outputs.compile == 'true' || github.event.client_payload.force }}
     strategy:
       fail-fast: false
       matrix:
