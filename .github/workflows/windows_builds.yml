@@ -322,7 +322,7 @@ jobs:
       - name: Compilation
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: use_mingw=yes ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          sconsflags: use_mingw=yes ${{ matrix.sconsflags }} ${{ env.SCONSFLAGS }}
           platform: windows
           target: ${{ matrix.target }}
 
@@ -616,7 +616,7 @@ jobs:
       - name: Compilation
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: use_mingw=yes ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          sconsflags: use_mingw=yes ${{ matrix.sconsflags }} ${{ env.SCONSFLAGS }}
           platform: windows
           target: ${{ matrix.target }}
 
