@@ -109,7 +109,7 @@ jobs:
           - name: Editor/w MONO
             cache-name: macos-editor-mono
             target: editor
-            sconsflags: ${{ github.event.client_payload.production && 'production=yes' || '' }}
+            sconsflags:  module_mono_enabled=yes ${{ github.event.client_payload.production && 'production=yes' || '' }}
             mono: true
 
     steps:
