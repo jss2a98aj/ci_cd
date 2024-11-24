@@ -238,7 +238,7 @@ jobs:
             fontconfig \
             libfontconfig-dev \
             dotnet-sdk-8.0 \
-            gcc-mingw-w64 g++-mingw-w64
+            gcc-mingw-w64 g++-mingw-w64 directx-headers-dev
           sudo update-alternatives --config x86_64-w64-mingw32-g++
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
           sudo update-alternatives --config x86_64-w64-mingw32-gcc
@@ -540,7 +540,7 @@ jobs:
             fontconfig \
             libfontconfig-dev \
             dotnet-sdk-8.0 \
-            gcc-mingw-w64 g++-mingw-w64
+            gcc-mingw-w64 g++-mingw-w64 directx-headers-dev
           sudo update-alternatives --config x86_64-w64-mingw32-g++
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
           sudo update-alternatives --config x86_64-w64-mingw32-gcc
