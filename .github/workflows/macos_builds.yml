@@ -198,7 +198,7 @@ jobs:
       - name: Editor Compilation (x86_64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }} arch=x86_64
+          sconsflags: ${{ env.SCONSFLAGS }} arch=x86_64 ${{ matrix.sconsflags }}
           platform: macos
           target: ${{ matrix.target }}
           tests: false
@@ -206,7 +206,7 @@ jobs:
       - name: Editor Compilation (arm64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }} arch=arm64
+          sconsflags: ${{ env.SCONSFLAGS }} arch=arm64 ${{ matrix.sconsflags }}
           platform: macos
           target: ${{ matrix.target }}
           tests: false
