@@ -1,0 +1,61 @@
+name: Download ANGLE Libraries
+description: Downloads and validates the ANGLE libraries.
+
+inputs:
+  angle_url_base:
+    description: Base URL for the ANGLE libraries.
+    required: true
+  angle_folder:
+    description: Directory to download and extract ANGLE libraries.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up ANGLE Folder
+      shell: bash
+      run: |
+        mkdir -p "${{ inputs.angle_folder }}"
+        echo "ANGLE folder created at: ${{ inputs.angle_folder }}"
+    
+    - name: Download ANGLE Libraries
+      shell: bash
+      run: |
+        base_url="${{ inputs.angle_url_base }}"
+        angle_folder="${{ inputs.angle_folder }}"
+
+        files=(
+          "windows_arm64.zip:$base_url-arm64-llvm-release.zip"
+          "windows_x86_64.zip:$base_url-x86_64-gcc-release.zip"
+          "windows_x86_32.zip:$base_url-x86_32-gcc-release.zip"
+          "macos_arm64.zip:$base_url-arm64-macos-release.zip"
+          "macos_x86_64.zip:$base_url-x86_64-macos-release.zip"
+        )
+
+        pushd "$angle_folder"
+        for file in "${files[@]}"; do
+          name=${file%%:*}
+          url=${file#*:}
+          echo "Downloading $name from $url..."
+          curl -L -o "$name" "$url"
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to download $name." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          unzip -o "$name" && rm -f "$name"
+        done
+        popd
+
+    - name: Validate ANGLE Libraries
+      shell: bash
+      run: |
+        if [ -z "$(ls -A ${{ inputs.angle_folder }})" ]; then
+          echo "Validation failed: ANGLE folder is empty." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        echo "ANGLE libraries downloaded and validated successfully." >> $GITHUB_STEP_SUMMARY
+
+outputs:
+  angle_folder:
+    description: Path to the ANGLE libraries folder.
+    value: ${{ inputs.angle_folder }}

@@ -1,0 +1,59 @@
+name: Download Mesa Libraries
+description: Downloads and validates the Mesa/NIR libraries.
+
+inputs:
+  mesa_url_base:
+    description: Base URL for the Mesa libraries.
+    required: true
+  mesa_folder:
+    description: Directory to download and extract Mesa libraries.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Mesa Folder
+      shell: bash
+      run: |
+        mkdir -p "${{ inputs.mesa_folder }}"
+        echo "Mesa folder created at: ${{ inputs.mesa_folder }}"
+    
+    - name: Download Mesa Libraries
+      shell: bash
+      run: |
+        base_url="${{ inputs.mesa_url_base }}"
+        mesa_folder="${{ inputs.mesa_folder }}"
+
+        files=(
+          "mesa_arm64.zip:$base_url-arm64-llvm-release.zip"
+          "mesa_x86_64.zip:$base_url-x86_64-gcc-release.zip"
+          "mesa_x86_32.zip:$base_url-x86_32-gcc-release.zip"
+        )
+
+        pushd "$mesa_folder"
+        for file in "${files[@]}"; do
+          name=${file%%:*}
+          url=${file#*:}
+          echo "Downloading $name from $url..."
+          curl -L -o "$name" "$url"
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to download $name." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          unzip -o "$name" && rm -f "$name"
+        done
+        popd
+
+    - name: Validate Mesa Libraries
+      shell: bash
+      run: |
+        if [ -z "$(ls -A ${{ inputs.mesa_folder }})" ]; then
+          echo "Validation failed: Mesa folder is empty." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        echo "Mesa libraries downloaded and validated successfully." >> $GITHUB_STEP_SUMMARY
+
+outputs:
+  mesa_folder:
+    description: Path to the Mesa libraries folder.
+    value: ${{ inputs.mesa_folder }}
