@@ -222,7 +222,8 @@ jobs:
             liblzma-dev \
             liblzma5 \
             libglu-dev \
-            libdbus-1-dev 
+            libdbus-1-dev \
+            libwayland-bin
           sudo apt-get install -y \
             yasm \
             xvfb \
@@ -278,9 +279,6 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
-      - name: Setup GCC problem matcher
-        uses: ammaraskar/gcc-problem-matcher@master
-
       - name: Download and extract mono-glue
         if: matrix.mono
         run: |
@@ -304,6 +302,9 @@ jobs:
 
           # Clean up the temporary directory
           rm -rf temp_extract monoglue.tar.gz
+
+      - name: Download Direct3D 12 SDK components
+        run: python ./misc/scripts/install_d3d12_sdk_windows.py
       
       - name: Compilation
         uses: ./.github/actions/godot-build
@@ -481,7 +482,7 @@ jobs:
           sudo apt-get update
 
           sudo apt-get install -y --no-install-recommends \
-            bash bzip2 curl file python3-full gettext wget \
+            bash bzip2 curl file gettext wget \
             git make nano patch scons pkg-config unzip xz-utils cmake gdb
 
           # Install required packages
@@ -582,6 +583,9 @@ jobs:
 
           # Clean up the temporary directory
           rm -rf temp_extract monoglue.tar.gz
+
+      - name: Download Direct3D 12 SDK components
+        run: python ./misc/scripts/install_d3d12_sdk_windows.py
       
       - name: Compilation
         uses: ./.github/actions/godot-build
