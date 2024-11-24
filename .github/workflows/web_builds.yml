@@ -455,7 +455,7 @@ jobs:
           mkdir -p cicd/storage
           
           # Download the .tar.gz package instead of .zip
-          curl -L "${{ env.CDN_URL }}/${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/${{ env.DEPLOY_TYPE }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz" -o storage/web-editor.tar.gz
+          curl -L "${{ env.CDN_URL }}${{ env.DEPLOY_TYPE }}/${{ github.event.client_payload.type || 'nightly' }}/${{ env.DEPLOY_TYPE }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz" -o cicd/storage/web-editor.tar.gz
 
           # Extract the main .tar.gz file
           tar -xzf cicd/storage/web-editor.tar.gz -C cicd/storage
