@@ -52,6 +52,7 @@ runs:
           exit 1
         fi
         echo "Mesa libraries downloaded and validated successfully." >> $GITHUB_STEP_SUMMARY
+        ls -la ${{ inputs.mesa_folder }} >> $GITHUB_STEP_SUMMARY
 
 outputs:
   mesa_folder:

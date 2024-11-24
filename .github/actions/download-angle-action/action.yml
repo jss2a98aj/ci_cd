@@ -54,6 +54,7 @@ runs:
           exit 1
         fi
         echo "ANGLE libraries downloaded and validated successfully." >> $GITHUB_STEP_SUMMARY
+        ls -la ${{ inputs.angle_folder }} >> $GITHUB_STEP_SUMMARY
 
 outputs:
   angle_folder:
