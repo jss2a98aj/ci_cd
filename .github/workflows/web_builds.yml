@@ -466,7 +466,7 @@ jobs:
           unzip "$inner_zip" -d ./cicd/web-editor/static
           
           # Rename the main HTML file
-          mv ./cicd/web-editor/static/blazium.editor.html ./web-editor/static/index.html
+          mv ./cicd/web-editor/static/blazium.editor.html ./cicd/web-editor/static/index.html
 
       - name: Build and push
         uses: docker/build-push-action@v6
