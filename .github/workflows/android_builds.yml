@@ -198,8 +198,8 @@ jobs:
           mkdir -p modules/mono/glue/GodotSharp/GodotSharpEditor
 
           # Move the extracted folders to their target locations
-          mv temp_extract/GodotSharp/* modules/mono/glue/GodotSharp/GodotSharp/
-          mv temp_extract/GodotSharpEditor/* modules/mono/glue/GodotSharp/GodotSharpEditor/
+          cp -r temp_extract/GodotSharp/. modules/mono/glue/GodotSharp/GodotSharp/
+          cp -r temp_extract/GodotSharpEditor/. modules/mono/glue/GodotSharp/GodotSharpEditor/
 
           # Clean up the temporary directory
           rm -rf temp_extract monoglue.tar.gz
@@ -212,6 +212,13 @@ jobs:
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
 
+      - name: Building C# Assemblies
+        if: matrix.mono
+        run: |
+          pushd platform/android/java
+          ./gradlew generateGodotMonoTemplates
+          popd
+          
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
         with:
