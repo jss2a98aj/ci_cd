@@ -294,7 +294,7 @@ jobs:
       
       - name: Create tar.gz Archive
         run: |
-          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz -C ./Blazium_macos.universal.zip .
+          tar -czvf ${{ matrix.cache-name }}-${{ github.event.client_payload.type || 'nightly' }}.tar.gz ./Blazium_macos.universal.zip
 
       - uses: BetaHuhn/do-spaces-action@v2
         with:
