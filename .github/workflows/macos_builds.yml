@@ -241,11 +241,13 @@ jobs:
       - name: Package Editor
         run: |
           MONO_SUFFIX=""
+          MONO_FSUFFIX=""
           ENTITLEMENTS_FILE="misc/dist/macos/editor_debug.entitlements"
           
           # Set suffix for Mono if enabled
           if [ "${{ matrix.mono }}" == "true" ]; then
             MONO_SUFFIX="_mono"
+            MONO_FSUFFIX=".mono"
           fi
 
           # Determine the entitlements file based on production flag
@@ -256,7 +258,7 @@ jobs:
           # Copy macOS application template and binary
           cp -r misc/dist/macos_tools.app ./Blazium${MONO_SUFFIX}.app
           mkdir -p Blazium${MONO_SUFFIX}.app/Contents/MacOS
-          cp bin/blazium.macos.${{ matrix.target }}.universal${MONO_SUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS/Blazium
+          cp bin/blazium.macos.${{ matrix.target }}.universal${MONO_FSUFFIX} Blazium${MONO_SUFFIX}.app/Contents/MacOS/Blazium
 
           # Copy GodotSharp resources if Mono is enabled
           if [ "${{ matrix.mono }}" == "true" ]; then
